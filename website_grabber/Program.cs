@@ -40,7 +40,18 @@ class Program
         Console.WriteLine($"JavaScript Content downloaded and saved to {javascriptFilePath}");
 
         // Download images
-        var a = await GetAllImages(url, name);
+        var urlsList = await GetAllImages(url, name);
+
+        // Save images names
+        var namesList = await GetAllImagesNames(url, name);
+
+        int counter = 0 ;
+        foreach ( var item in urlsList)
+        {
+            await Console.Out.WriteLineAsync($"Downlaoding {item}");
+            await DownloadImage(item, name, counter);
+            counter++;
+        }
 
         // Parse the HTML and fetch the car models
         //List<string> carModels = FetchCarModels(htmlContent);
@@ -53,7 +64,7 @@ class Program
 
     }
 
-
+    //get images URLs and save in a txt file
     static async Task<List<string>> GetAllImages(string url, string name)
     {
         List<string> ImageList = new List<string>();
@@ -91,6 +102,120 @@ class Program
 
         return ImageList;
     }
+
+    static async Task<List<string>> GetAllImagesNames(string url, string name)
+    {
+        List<string> namesList = new List<string>();
+
+        HttpClient client = new HttpClient();
+        HttpResponseMessage response = await client.GetAsync(url);
+        string source = await response.Content.ReadAsStringAsync();
+        HtmlDocument document = new();
+        document.LoadHtml(source);
+
+        // For every tag in the HTML containing the node img.
+        foreach (var alt in document.DocumentNode.Descendants("img")
+        .Where(i => !i.Ancestors("noscript").Any())
+        .Select(i => i.Attributes["alt"]))
+        {
+            var altString = alt.Value.ToString();
+
+            char[] charactersToReplace = { '<', '>',':','"','/','\\','|','?','*' };
+            string modifiedString = altString;
+
+            foreach (char character in charactersToReplace)
+            {
+                modifiedString = modifiedString.Replace(character, '-');
+            }
+
+            Console.WriteLine(modifiedString);
+
+            Console.WriteLine(altString);
+            namesList.Add(modifiedString);
+        }
+        string filePath = $"../../../res/{name}/names.txt";
+        File.WriteAllLines(filePath, namesList);
+
+        return namesList;
+    }
+
+    static async Task DownloadImage(string imageUrl, string name, int counter)
+    {
+        string directoryPath = $"../../../res/{name}/img/";
+        string nameFilePath = $"../../../res/{name}/names.txt";
+
+        string[] lines = File.ReadAllLines(nameFilePath);
+        List<string> namesList = new List<string>(lines);
+
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+            Console.WriteLine("Directory created: " + directoryPath);
+        }
+        else
+        {
+            Console.WriteLine("Directory already exists: " + directoryPath);
+        }
+
+        using (HttpClient client = new HttpClient())
+        {
+            try
+            {
+                using (HttpResponseMessage response = await client.GetAsync(imageUrl))
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        using (Stream stream = await response.Content.ReadAsStreamAsync())
+                        using (FileStream fileStream = new FileStream($"../../../res/{name}/img/{namesList[counter]}.png", FileMode.Create))
+                        {
+                            await stream.CopyToAsync(fileStream);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Failed to download image. Status code: {response.StatusCode}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while downloading the image: {ex.Message}");
+            }
+        }
+    }
+
+    //static string GetImageName(string imageUrl)
+    //{
+    //    string imageName = "";
+    //    if (imageUrl == null)
+    //        Console.WriteLine("Error");
+
+    //    var split_string = imageUrl.Split("/");
+    //    imageName = split_string.Last();
+    //    if (imageName.Length > 30)
+    //    {
+    //        //idhub files
+    //        Console.WriteLine();
+    //        Console.WriteLine(imageName);
+    //        Console.WriteLine();
+
+    //        var shorterImageName = imageName.Split("_").Last();
+    //        imageName = $"{shorterImageName
+    //            .Split(".")
+    //            .First()}.png";
+    //    }
+    //    Console.WriteLine(imageName);
+    //    return imageName;
+    //}
+
+
+
+
+
+
+
+
+
 
 
     static async Task<string> DownloadContentAsync(string url)
@@ -130,23 +255,6 @@ class Program
 
         return string.Empty;
     }
-
-    //static List<string> FetchCarModels(string htmlContent)
-    //{
-    //    var carModels = new List<string>();
-
-    //    HtmlDocument doc = new HtmlDocument();
-    //    doc.LoadHtml(htmlContent);
-
-    //    // Modify the XPath expression to match the specific element that contains the car models
-    //    HtmlNodeCollection carModelNodes = doc.DocumentNode.SelectNodes("//div[@class='a-html-inject__container']//a");
-    //    if (carModelNodes != null)
-    //    {
-    //        carModels = carModelNodes.Select(node => node.InnerText.Trim()).ToList();
-    //    }
-
-    //    return carModels;
-    //}
 
     static string ExtractCssUrl(string htmlContent)
     {
