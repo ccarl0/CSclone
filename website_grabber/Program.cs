@@ -16,8 +16,6 @@ class Program
         string name = url.Split('.').ToArray()[1];
         Console.WriteLine(name);
 
-        
-
         // Create the folder if it doesn't exist
         Directory.CreateDirectory($"../../../res/{name}");
 
@@ -57,15 +55,8 @@ class Program
         await Console.Out.WriteLineAsync("Rewriting HTML");
         RewriteHtml(name);
 
-        // Parse the HTML and fetch the car models
-        //List<string> carModels = FetchCarModels(htmlContent);
-        //Console.WriteLine("Car Models fetched:");
-        //foreach (var carModel in carModels)
-        //{
-        //    Console.WriteLine(carModel);
-        //}
-
-
+        await Console.Out.WriteLineAsync("Getting page HREF");
+        GetAllHREFs(url, name);
     }
 
     //get images URLs and save in a txt file
@@ -188,31 +179,6 @@ class Program
         }
     }
 
-    //static string GetImageName(string imageUrl)
-    //{
-    //    string imageName = "";
-    //    if (imageUrl == null)
-    //        Console.WriteLine("Error");
-
-    //    var split_string = imageUrl.Split("/");
-    //    imageName = split_string.Last();
-    //    if (imageName.Length > 30)
-    //    {
-    //        //idhub files
-    //        Console.WriteLine();
-    //        Console.WriteLine(imageName);
-    //        Console.WriteLine();
-
-    //        var shorterImageName = imageName.Split("_").Last();
-    //        imageName = $"{shorterImageName
-    //            .Split(".")
-    //            .First()}.png";
-    //    }
-    //    Console.WriteLine(imageName);
-    //    return imageName;
-    //}
-
-
     static void RewriteHtml(string name)
     {
         string filePath = $"../../../res/{name}/{name}.html";
@@ -240,12 +206,9 @@ class Program
 
                 Console.WriteLine(modifiedString);
 
-
-                Console.WriteLine();
                 Console.WriteLine();
                 Console.WriteLine(alt);
                 Console.WriteLine(modifiedString);
-                Console.WriteLine();
                 Console.WriteLine();
 
                 // Set the alt value as the new src attribute value
@@ -263,28 +226,37 @@ class Program
             // Handle the case when the file doesn't exist
             // ...
             Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
             Console.WriteLine("Error");
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
             Console.WriteLine();
         }
     }
+    
 
+    static void GetAllHREFs(string url, string name)
+    {
+        string filePath = $"../../../res/{name}/{name}.html";
+        Console.WriteLine(filePath);
+        string outputFilePath = $"../../../res/{name}/href.txt";
 
+        HtmlDocument doc = new HtmlDocument();
+        doc.Load(filePath);
 
+        // Select all a tags in the document
+        var anchorTags = doc.DocumentNode.Descendants("a");
 
+        // Collect the URLs from href attributes
+        var urls = new List<string>();
+        foreach (var anchorTag in anchorTags)
+        {
+            string href = anchorTag.GetAttributeValue("href", "");
+            urls.Add(href);
+        }
 
+        // Save the URLs to a text file
+        File.WriteAllLines(outputFilePath, urls);
 
-
-
-
-
+        Console.WriteLine("URLs saved to the file successfully.");
+    }
 
     static async Task<string> DownloadContentAsync(string url)
     {
