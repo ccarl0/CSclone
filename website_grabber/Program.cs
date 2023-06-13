@@ -53,6 +53,10 @@ class Program
             counter++;
         }
 
+
+        await Console.Out.WriteLineAsync("Rewriting HTML");
+        RewriteHtml(name);
+
         // Parse the HTML and fetch the car models
         //List<string> carModels = FetchCarModels(htmlContent);
         //Console.WriteLine("Car Models fetched:");
@@ -207,6 +211,70 @@ class Program
     //    Console.WriteLine(imageName);
     //    return imageName;
     //}
+
+
+    static void RewriteHtml(string name)
+    {
+        string filePath = $"../../../res/{name}/{name}.html";
+
+        // Check if the file exists
+        if (File.Exists(filePath))
+        {
+            // Load the HTML document from the file
+            HtmlDocument doc = new HtmlDocument();
+            doc.Load(filePath);
+
+            // Select all img tags in the document
+            foreach (HtmlNode imgTag in doc.DocumentNode.Descendants("img"))
+            {
+                // Get the alt attribute value
+                string alt = imgTag.GetAttributeValue("alt", "");
+
+                char[] charactersToReplace = { '<', '>', ':', '"', '/', '\\', '|', '?', '*' };
+                string modifiedString = alt;
+
+                foreach (char character in charactersToReplace)
+                {
+                    modifiedString = modifiedString.Replace(character, '-');
+                }
+
+                Console.WriteLine(modifiedString);
+
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine(alt);
+                Console.WriteLine(modifiedString);
+                Console.WriteLine();
+                Console.WriteLine();
+
+                // Set the alt value as the new src attribute value
+                imgTag.SetAttributeValue("src", $"img\\{modifiedString}.png");
+                Console.WriteLine($"img\\{modifiedString}.png");
+            }
+
+            // Get the modified HTML content
+            string modifiedHtml = doc.DocumentNode.OuterHtml;
+
+            doc.Save(filePath);
+        }
+        else
+        {
+            // Handle the case when the file doesn't exist
+            // ...
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine("Error");
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+        }
+    }
 
 
 
