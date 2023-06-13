@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 
@@ -14,6 +15,8 @@ class Program
 
         string name = url.Split('.').ToArray()[1];
         Console.WriteLine(name);
+
+        
 
         // Create the folder if it doesn't exist
         Directory.CreateDirectory($"../../../res/{name}");
@@ -36,16 +39,59 @@ class Program
         File.WriteAllText(javascriptFilePath, javascriptContent);
         Console.WriteLine($"JavaScript Content downloaded and saved to {javascriptFilePath}");
 
-        // Parse the HTML and fetch the car models
-        List<string> carModels = FetchCarModels(htmlContent);
-        Console.WriteLine("Car Models fetched:");
-        foreach (var carModel in carModels)
-        {
-            Console.WriteLine(carModel);
-        }
+        // Download images
+        var a = await GetAllImages(url, name);
 
-        
+        // Parse the HTML and fetch the car models
+        //List<string> carModels = FetchCarModels(htmlContent);
+        //Console.WriteLine("Car Models fetched:");
+        //foreach (var carModel in carModels)
+        //{
+        //    Console.WriteLine(carModel);
+        //}
+
+
     }
+
+
+    static async Task<List<string>> GetAllImages(string url, string name)
+    {
+        List<string> ImageList = new List<string>();
+
+        HttpClient client = new HttpClient();
+        HttpResponseMessage response = await client.GetAsync(url);
+        string source = await response.Content.ReadAsStringAsync();
+        HtmlDocument document = new ();
+        document.LoadHtml(source);
+
+        // For every tag in the HTML containing the node img.
+        foreach (var link in document.DocumentNode.Descendants("img")
+            .Select(i => i.Attributes["src"]))
+        {
+            var linkString = link.Value.ToString();
+            if (linkString.StartsWith("data:image"))
+            {
+                //skipping 64-encoded images
+                continue;
+            }
+            else if (linkString.StartsWith("/idhub"))
+            {
+                var imagePath = linkString;
+                linkString = $"https://www.volkswagen.it{imagePath}";
+                ImageList.Add(linkString);
+            }
+            else if(linkString.StartsWith("https:"))
+            {
+                await Console.Out.WriteLineAsync(linkString);
+                ImageList.Add(linkString);
+            }
+        }
+        string filePath = $"../../../res/{name}/links.txt";
+        File.WriteAllLines(filePath, ImageList);
+
+        return ImageList;
+    }
+
 
     static async Task<string> DownloadContentAsync(string url)
     {
@@ -85,22 +131,22 @@ class Program
         return string.Empty;
     }
 
-    static List<string> FetchCarModels(string htmlContent)
-    {
-        var carModels = new List<string>();
+    //static List<string> FetchCarModels(string htmlContent)
+    //{
+    //    var carModels = new List<string>();
 
-        HtmlDocument doc = new HtmlDocument();
-        doc.LoadHtml(htmlContent);
+    //    HtmlDocument doc = new HtmlDocument();
+    //    doc.LoadHtml(htmlContent);
 
-        // Modify the XPath expression to match the specific element that contains the car models
-        HtmlNodeCollection carModelNodes = doc.DocumentNode.SelectNodes("//div[@class='a-html-inject__container']//a");
-        if (carModelNodes != null)
-        {
-            carModels = carModelNodes.Select(node => node.InnerText.Trim()).ToList();
-        }
+    //    // Modify the XPath expression to match the specific element that contains the car models
+    //    HtmlNodeCollection carModelNodes = doc.DocumentNode.SelectNodes("//div[@class='a-html-inject__container']//a");
+    //    if (carModelNodes != null)
+    //    {
+    //        carModels = carModelNodes.Select(node => node.InnerText.Trim()).ToList();
+    //    }
 
-        return carModels;
-    }
+    //    return carModels;
+    //}
 
     static string ExtractCssUrl(string htmlContent)
     {
