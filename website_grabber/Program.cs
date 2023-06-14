@@ -3,72 +3,105 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using HtmlAgilityPack;
 
 class Program
 {
     static async Task Main()
     {
-        Console.Write("Enter the URL of the web page: ");
-        string url = Console.ReadLine();
 
-        string name = url.Split('.').ToArray()[1];
-        Console.WriteLine(name);
+        string url = "https://www.volkswagen.it/it/modelli/up.html";
+        string name = url.Split('.').ToArray()[1]; ;
+        await Console.Out.WriteLineAsync($"URL: {url}");
+        await Console.Out.WriteLineAsync($"\n\nName: {name}");
 
-        // Create the folder if it doesn't exist
-        Directory.CreateDirectory($"../../../res/{name}");
+        // downlaod html + stuff
+        await Console.Out.WriteLineAsync($"\n\nGetting HTML CSS and JS");
+        await DownloadPageAsync(url, name);
 
-        // Download the HTML content
-        string htmlContent = await DownloadContentAsync(url);
-        string htmlFilePath = $"../../../res/{name}/{name}.html";
-        File.WriteAllText(htmlFilePath, htmlContent);
-        Console.WriteLine($"HTML Content downloaded and saved to {htmlFilePath}");
 
-        // Download the CSS content
-        string cssContent = await DownloadCssAsync(htmlContent, url);
-        string cssFilePath = $"../../../res/{name}/styles.css";
-        File.WriteAllText(cssFilePath, cssContent);
-        Console.WriteLine($"CSS Content downloaded and saved to {cssFilePath}\"");
 
-        // Download the JavaScript content
-        string javascriptContent = await DownloadJavaScriptAsync(htmlContent, url);
-        string javascriptFilePath = $"../../../res/{name}/script.js";
-        File.WriteAllText(javascriptFilePath, javascriptContent);
-        Console.WriteLine($"JavaScript Content downloaded and saved to {javascriptFilePath}");
+        // get models url
+        await Console.Out.WriteLineAsync("\n\nGetting models href");
+        await GetModels(name);
 
-        // Download images
-        var urlsList = await GetAllImages(url, name);
 
-        // Save images names
-        var namesList = await GetAllImagesNames(url, name);
-
-        int counter = 0 ;
-        foreach ( var item in urlsList)
+        // get images
+        // await GetAllImages(url, name);
+        var urlsList = await GetAllImagesURLs(name);
+        await GetAllImagesNames(name);
+        int counter = 0;
+        foreach (var item in urlsList)
         {
             await Console.Out.WriteLineAsync($"Downlaoding {item}");
             await DownloadImage(item, name, counter);
             counter++;
         }
 
+        // clean html
+        // remove: header, footer, configuration button, nav bar
+        // rewrites srcs
+        CleanHtml(name);
 
-        await Console.Out.WriteLineAsync("Rewriting HTML");
-        RewriteHtml(name);
 
-        await Console.Out.WriteLineAsync("Getting page HREF");
-        GetAllHREFs(url, name);
+
+
+
+        await DownloadJavaScriptAndRemoveTagAsync(url);
     }
 
-    //get images URLs and save in a txt file
-    static async Task<List<string>> GetAllImages(string url, string name)
-    {
-        List<string> ImageList = new List<string>();
 
-        HttpClient client = new HttpClient();
-        HttpResponseMessage response = await client.GetAsync(url);
-        string source = await response.Content.ReadAsStringAsync();
-        HtmlDocument document = new ();
-        document.LoadHtml(source);
+    static async Task<string> DownloadJavaScriptAndRemoveTagAsync(string pageUrl)
+    {
+        string scriptId = "spaModel";
+
+        HttpClient httpClient = new HttpClient();
+
+        // Download the HTML content of the page
+        string htmlContent = await httpClient.GetStringAsync(pageUrl);
+
+        HtmlDocument doc = new HtmlDocument();
+        doc.LoadHtml(htmlContent);
+
+        // Find the <script> tag with the specified id
+        HtmlNode scriptTag = doc.GetElementbyId(scriptId);
+
+        if (scriptTag != null)
+        {
+            // Extract the JavaScript content from the script tag
+            string javascriptContent = scriptTag.InnerHtml;
+
+            // Save the JavaScript content to a file
+            string javascriptFilePath = $"../../../res/volkswagen/script.js";
+            File.AppendAllText(javascriptFilePath, javascriptContent);
+
+            return javascriptContent;
+        }
+
+        return string.Empty;
+    }
+
+
+
+
+
+
+
+
+
+
+    //get images URLs and save in a txt file
+    static async Task<List<string>> GetAllImagesURLs(string name)
+    {
+        List<string> imagesUrlsList = new List<string>();
+
+        string htmlFilePath = $"../../../res/{name}/{name}.html";
+
+        HtmlDocument document = new HtmlDocument();
+        document.Load(htmlFilePath);
 
         // For every tag in the HTML containing the node img.
         foreach (var link in document.DocumentNode.Descendants("img")
@@ -84,57 +117,51 @@ class Program
             {
                 var imagePath = linkString;
                 linkString = $"https://www.volkswagen.it{imagePath}";
-                ImageList.Add(linkString);
+                imagesUrlsList.Add(linkString);
             }
             else if(linkString.StartsWith("https:"))
             {
                 await Console.Out.WriteLineAsync(linkString);
-                ImageList.Add(linkString);
+                imagesUrlsList.Add(linkString);
             }
         }
-        string filePath = $"../../../res/{name}/links.txt";
-        File.WriteAllLines(filePath, ImageList);
+        string filePath = $"../../../res/{name}/images_urls.txt";
+        File.WriteAllLines(filePath, imagesUrlsList);
 
-        return ImageList;
+        return imagesUrlsList;
     }
 
-    static async Task<List<string>> GetAllImagesNames(string url, string name)
+    static async Task<List<string>> GetAllImagesNames(string name)
     {
+        string filePath = $"../../../res/{name}/{name}.html";
         List<string> namesList = new List<string>();
 
-        HttpClient client = new HttpClient();
-        HttpResponseMessage response = await client.GetAsync(url);
-        string source = await response.Content.ReadAsStringAsync();
-        HtmlDocument document = new();
-        document.LoadHtml(source);
+        HtmlDocument document = new HtmlDocument();
+        document.Load(filePath);
 
         // For every tag in the HTML containing the node img.
         foreach (var alt in document.DocumentNode.Descendants("img")
-        .Where(i => !i.Ancestors("noscript").Any())
-        .Select(i => i.Attributes["alt"]))
+            .Where(i => !i.Ancestors("noscript").Any())
+            .Select(i => i.Attributes["alt"]))
         {
-            var altString = alt.Value.ToString();
+            var altString = alt?.Value?.ToString();
 
-            char[] charactersToReplace = { '<', '>',':','"','/','\\','|','?','*' };
-            string modifiedString = altString;
-
-            foreach (char character in charactersToReplace)
+            if (altString != null)
             {
-                modifiedString = modifiedString.Replace(character, '-');
+                string legalString = ReplaceIllegalChar(altString);
+                namesList.Add(legalString);
             }
-
-            Console.WriteLine(modifiedString);
-
-            Console.WriteLine(altString);
-            namesList.Add(modifiedString);
         }
-        string filePath = $"../../../res/{name}/names.txt";
-        File.WriteAllLines(filePath, namesList);
+
+        string outputFilePath = $"../../../res/{name}/names.txt";
+        File.WriteAllLines(outputFilePath, namesList);
 
         return namesList;
     }
 
-    static async Task DownloadImage(string imageUrl, string name, int counter)
+
+
+    static async Task DownloadImage(string imageUrl, string name,int counter)
     {
         string directoryPath = $"../../../res/{name}/img/";
         string nameFilePath = $"../../../res/{name}/names.txt";
@@ -146,10 +173,6 @@ class Program
         {
             Directory.CreateDirectory(directoryPath);
             Console.WriteLine("Directory created: " + directoryPath);
-        }
-        else
-        {
-            Console.WriteLine("Directory already exists: " + directoryPath);
         }
 
         using (HttpClient client = new HttpClient())
@@ -179,7 +202,7 @@ class Program
         }
     }
 
-    static void RewriteHtml(string name)
+    static void RewriteHtmlImgTags(string name)
     {
         string filePath = $"../../../res/{name}/{name}.html";
 
@@ -196,20 +219,9 @@ class Program
                 // Get the alt attribute value
                 string alt = imgTag.GetAttributeValue("alt", "");
 
-                char[] charactersToReplace = { '<', '>', ':', '"', '/', '\\', '|', '?', '*' };
-                string modifiedString = alt;
+                //replace illegal filename character
+                string modifiedString = ReplaceIllegalChar(alt);
 
-                foreach (char character in charactersToReplace)
-                {
-                    modifiedString = modifiedString.Replace(character, '-');
-                }
-
-                Console.WriteLine(modifiedString);
-
-                Console.WriteLine();
-                Console.WriteLine(alt);
-                Console.WriteLine(modifiedString);
-                Console.WriteLine();
 
                 // Set the alt value as the new src attribute value
                 imgTag.SetAttributeValue("src", $"img\\{modifiedString}.png");
@@ -224,19 +236,35 @@ class Program
         else
         {
             // Handle the case when the file doesn't exist
-            // ...
-            Console.WriteLine();
-            Console.WriteLine("Error");
-            Console.WriteLine();
+            Console.WriteLine("File doesn't exist");
         }
     }
-    
 
-    static void GetAllHREFs(string url, string name)
+    static string ReplaceIllegalChar(string illegalString)
+    {
+        char[] illegalCharacters = { '<', '>', ':', '"', '/', '\\', '|', '?', '*' };
+        string legalString = illegalString;
+
+        foreach (char character in illegalCharacters)
+            legalString = legalString.Replace(character, '-');
+
+        return legalString;
+    }
+
+
+
+    static Task<List<string>> GetModels(string name)
+    {
+        var getURLsRes = GetURLs(name);
+        var getPathsRes = URL2Path(getURLsRes.Result, name);
+
+        return Task.FromResult(getPathsRes.Result);
+    }
+
+    static Task<List<string>> GetURLs(string name)
     {
         string filePath = $"../../../res/{name}/{name}.html";
-        Console.WriteLine(filePath);
-        string outputFilePath = $"../../../res/{name}/href.txt";
+        string outputFilePath = $"../../../res/{name}/hrefs.txt";
 
         HtmlDocument doc = new HtmlDocument();
         doc.Load(filePath);
@@ -245,17 +273,43 @@ class Program
         var anchorTags = doc.DocumentNode.Descendants("a");
 
         // Collect the URLs from href attributes
-        var urls = new List<string>();
+        var hrefList = new List<string>();
         foreach (var anchorTag in anchorTags)
         {
             string href = anchorTag.GetAttributeValue("href", "");
-            urls.Add(href);
+            hrefList.Add(href);
         }
 
         // Save the URLs to a text file
-        File.WriteAllLines(outputFilePath, urls);
+        File.WriteAllLines(outputFilePath, hrefList);
 
-        Console.WriteLine("URLs saved to the file successfully.");
+        //URL2Path(hrefList, name);
+
+        return Task.FromResult(hrefList);
+    }
+
+    static Task<List<string>> URL2Path(List<string> hrefList, string name)
+    {
+        string outputFilePath = $"../../../res/{name}/paths.txt";
+        List<string> pathList = new();
+
+        foreach (var item in hrefList)
+        {
+            if (Uri.IsWellFormedUriString(item, UriKind.Absolute))
+            {
+                Uri uri = new Uri(item);
+                var path = uri.PathAndQuery.ToString();
+                pathList.Add(path);
+            }
+            else
+            {
+                pathList.Add(item);
+            }   
+        }
+        pathList.RemoveAll(path => path == "#");
+        File.WriteAllLines(outputFilePath, pathList);
+
+        return Task.FromResult(pathList);
     }
 
     static async Task<string> DownloadContentAsync(string url)
@@ -280,6 +334,157 @@ class Program
 
         return string.Empty;
     }
+
+    
+    static async Task DownloadPageAsync(string url, string name)
+    {
+        var htmlContent = await DownloadContentAsync(url);
+        var cssContent = await DownloadCssAsync(htmlContent, url);
+        var jsContent = await DownloadJavaScriptAsync(htmlContent, url);
+
+        await Console.Out.WriteLineAsync($"HTML: {htmlContent}");
+        await Console.Out.WriteLineAsync($"CSS: {cssContent}");
+        await Console.Out.WriteLineAsync($"JS: {jsContent}");
+
+        await Console.Out.WriteLineAsync("Done!");
+
+
+        string htmlFilePath = $"../../../res/{name}/{name}.html";
+        string cssFilePath = $"../../../res/{name}/styles.css";
+        string jsFilePath = $"../../../res/{name}/script.js";
+
+        Directory.CreateDirectory($"../../../res/{name}");
+
+        File.WriteAllText(htmlFilePath, htmlContent);
+        File.WriteAllText(cssFilePath, cssContent);
+        File.WriteAllText(jsFilePath, jsContent);
+    }
+
+
+    static void CleanHtml(string name)
+    {
+        RemoveHeader(name);
+        RemoveFooter(name);
+        RemoveConfiguratorButton(name);
+        RemoveNav(name);
+        RewriteHtmlImgTags(name);
+
+        //js clearance
+        RemoveScriptById(name, "spaModel");
+    }
+
+    static void RemoveFooter(string name)
+    {
+        HtmlDocument doc = new HtmlDocument();
+        string filePath = $"../../../res/{name}/{name}.html";
+        doc.Load(filePath);
+
+        // Locate the footer
+        HtmlNode footerToRemove = doc.DocumentNode.SelectSingleNode("//footer");
+
+        // Check if the div element exists
+        if (footerToRemove != null)
+        {
+            // Remove the div element from the document
+            footerToRemove.Remove();
+        }
+
+        // Save the modified HTML document to a new file or overwrite the existing file
+        doc.Save(filePath); // Replace with the desired file path
+    }
+
+    static void RemoveHeader(string name)
+    {
+        HtmlDocument doc = new HtmlDocument();
+        string filePath = $"../../../res/{name}/{name}.html";
+        doc.Load(filePath);
+
+        // Locate the footer
+        HtmlNode headerToRemove = doc.DocumentNode.SelectSingleNode("//header");
+
+        // Check if the div element exists
+        if (headerToRemove != null)
+        {
+            // Remove the div element from the document
+            headerToRemove.Remove();
+        }
+
+        // Save the modified HTML document to a new file or overwrite the existing file
+        doc.Save(filePath); // Replace with the desired file path
+    }
+
+    static void RemoveConfiguratorButton(string name)
+    {
+        //doesn't work
+
+        HtmlDocument doc = new HtmlDocument();
+        string filePath = $"../../../res/{name}/{name}.html";
+        doc.Load(filePath);
+
+        // Locate the button to remove
+        HtmlNode buttonToRemove = doc.DocumentNode.SelectSingleNode("//button[@aria-label='Load your configuration using a dialog.']");
+
+        // Check if the div element exists
+        if (buttonToRemove != null)
+        {
+            // Remove the div element from the document
+            buttonToRemove.Remove();
+        }
+
+        // Save the modified HTML document to a new file or overwrite the existing file
+        doc.Save(filePath); // Replace with the desired file path
+    }
+
+    static void RemoveNav(string name)
+    {
+        //doesn't work
+
+        HtmlDocument doc = new HtmlDocument();
+        string filePath = $"../../../res/{name}/{name}.html";
+        doc.Load(filePath);
+
+        // Locate the nav to remove
+        HtmlNode navToRemove = doc.DocumentNode.SelectSingleNode("//nav[@aria-label='breadcrumbs' and contains(@class, 'StyledBreadcrumbsWrapper-OTKrm')]");
+        HtmlNode menuToRemove = doc.DocumentNode.SelectSingleNode("//nav[@role='navigation' and @aria-hidden='true' and contains(@class, 'StyledNav-rGtno')]");
+
+        // Check if the nav element exists
+        if (navToRemove != null)
+        {
+            // Remove the nav element from the document
+            navToRemove.Remove();
+        }
+
+        if (menuToRemove != null)
+        {
+            menuToRemove.Remove();
+        }
+
+        // Save the modified HTML document to a new file or overwrite the existing file
+        doc.Save(filePath); // Replace with the desired file path
+    }
+
+    static void RemoveScriptById(string name, string scriptId)
+    {
+        //doesn't work
+
+        HtmlDocument doc = new HtmlDocument();
+        string filePath = $"../../../res/{name}/{name}.html";
+        doc.Load(filePath);
+
+        // Locate the nav to remove
+        HtmlNode scriptTag = doc.GetElementbyId(scriptId);
+
+        // Check if the nav element exists
+        if (scriptTag != null)
+        {
+            // Remove the nav element from the document
+            scriptTag.Remove();
+        }
+
+        // Save the modified HTML document to a new file or overwrite the existing file
+        doc.Save(filePath); // Replace with the desired file path
+    }
+
 
     static async Task<string> DownloadJavaScriptAsync(string htmlContent, string baseUrl)
     {
