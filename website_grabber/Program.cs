@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 using HtmlAgilityPack;
 
@@ -14,14 +17,16 @@ class Program
     static async Task Main()
     {
 
-        var client = new HttpClient();
-        var request = new HttpRequestMessage(HttpMethod.Get, "https://www.volkswagen.it/it/modelli/up.html");
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        Console.WriteLine(await response.Content.ReadAsStringAsync());
-        var a = await response.Content.ReadAsStringAsync();
+        //var client = new HttpClient();
+        //var request = new HttpRequestMessage(HttpMethod.Get, "https://www.volkswagen.it/it/modelli/nuova-polo.html");
+        //var response = await client.SendAsync(request);
+        //response.EnsureSuccessStatusCode();
+        //Console.WriteLine(await response.Content.ReadAsStringAsync());
+        //var a = await response.Content.ReadAsStringAsync();
 
-        string url = "https://www.volkswagen.it/it/modelli/up.html";
+        //string url = "https://www.volkswagen.it/it/modelli/id3.html";
+        Console.WriteLine("Input url");
+        string url = Console.ReadLine();
         string name = url.Split('.').ToArray()[1]; ;
         await Console.Out.WriteLineAsync($"URL: {url}");
         await Console.Out.WriteLineAsync($"\n\nName: {name}");
@@ -39,15 +44,15 @@ class Program
 
         // get images
         //await GetAllImages(url, name);
-        var urlsList = await GetAllImagesURLs(name);
-        await GetAllImagesNames(name);
-        int counter = 0;
-        foreach (var item in urlsList)
-        {
-            await Console.Out.WriteLineAsync($"Downlaoding {item}");
-            await DownloadImage(item, name, counter);
-            counter++;
-        }
+        //var urlsList = await GetAllImagesURLs(name);
+        //await GetAllImagesNames(name);
+        //int counter = 0;
+        //foreach (var item in urlsList)
+        //{
+        //    await Console.Out.WriteLineAsync($"Downlaoding {item}");
+        //    await DownloadImage(item, name, counter);
+        //    counter++;
+        //}
 
         // clean html
         // remove: header, footer, configuration button, nav bar
@@ -361,7 +366,7 @@ class Program
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
-        Console.WriteLine(await response.Content.ReadAsStringAsync());
+        //Console.WriteLine(await response.Content.ReadAsStringAsync());
         return await response.Content.ReadAsStringAsync();
 
         
@@ -417,6 +422,131 @@ class Program
         RemoveNav(name);
         RewriteHtmlImgTags(name);
 
+        //List<string> divToRemoveList = new List<string>
+        //{
+        //    "//*[@id=\"reactmount\"]/div/div[1]/div/div[2]/div", // header
+        //    "//*[@id=\"stage_copy\"]/div/div[2]/div[3]", //richiedi preventivo button
+        //    "//*[@id=\"cartechnicaldatasect_1698030854\"]/div/div", //configura button
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[1]/div", //promozioni
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[4]/div[2]/div[3]", // scopri i sistemi di assistenza button
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[3]/div[5]", // scopri i fari button
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[6]/div/div[3]", // scopri di più cockpit button
+        //    "//*[@id=\"sectiongroup_7104651_powerteasersection_c\"]/div/div/div[6]", // scopri i sistemi di assistenza button
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[8]", // Nuova Polo TGI a metano
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[9]", //  scegli la versione
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[10]", // mobilità metano
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[11]", // maggiori informazioni
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[12]", //app e accessori
+        //    "//*[@id=\"sectiongroup_1597799_twocolumnssection\"]", // listino
+        //    "//*[@id=\"firstlevelteasersect\"]", // scopri le nuove polo
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[15]", // modelli e nuova polo gti
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[16]", // potrebbe interessarti
+        //    "//*[@id=\"reactmount\"]/div/div[2]", // footer
+        //    "//*[@id=\"versioni\"]", // versioni
+        //    "//*[@id=\"newslettersignupsect\"]" //maggiori informazioni
+        //};
+
+        //List<string> divToRemoveList = new List<string>
+        //{
+        //    "//*[@id=\"reactmount\"]/div/div[1]/div/div[2]/div", // header
+        //    "//*[@id=\"stage_copy\"]/div/div[2]/div[3]", //richiedi preventivo button
+        //    "//*[@id=\"cartechnicaldatasect_1698030854\"]/div/div", //configura button
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[1]/div", //promozioni
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[4]/div[2]/div[3]", // scopri i sistemi di assistenza button
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[3]/div[5]", // scopri i fari button
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[6]/div/div[3]", // scopri di più cockpit button
+        //    "//*[@id=\"sectiongroup_7104651_powerteasersection_c\"]/div/div/div[6]", // scopri i sistemi di assistenza button
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[8]", // Nuova Polo TGI a metano
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[9]", //  scegli la versione
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[10]", // mobilità metano
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[11]", // maggiori informazioni
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[12]", //app e accessori
+        //    "//*[@id=\"sectiongroup_1597799_twocolumnssection\"]", // listino
+        //    "//*[@id=\"firstlevelteasersect\"]", // scopri le nuove polo
+        //    "//*[@id=\"firstlevelteasersect\"]", // modelli e nuova polo gti
+        //    "//*[@id=\"editorialteasersecti_686435660\"]", // potrebbe interessarti
+        //    //"//*[@id=\"reactmount\"]/div/div[2]/footer", // footer
+        //    "//*[@id=\"versioni\"]", // versioni
+        //    "//*[@id=\"newslettersignupsect\"]" //maggiori informazioni
+        //};
+
+        //List<string> PathToRemoveList = new List<string>
+        //{
+        //    "//*[@id=\"reactmount\"]/div/div[1]/div/div[2]/div", // header
+        //    "//*[@id=\"stage_copy\"]/div/div[2]/div[3]", //richiedi preventivo button
+        //    "//*[@id=\"cartechnicaldatasect_1698030854\"]/div/div", //configura button
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[1]/div", //promozioni
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[4]/div[2]/div[3]", // scopri i sistemi di assistenza button
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[3]/div[5]", // scopri i fari button
+        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[6]/div/div[3]", // scopri di più cockpit button
+        //    "//*[@id=\"sectiongroup_7104651_powerteasersection_c\"]/div/div/div[6]", // scopri i sistemi di assistenza button
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[8]", // Nuova Polo TGI a metano
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[9]", //  scegli la versione
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[10]", // mobilità metano
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[11]", // maggiori informazioni
+        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[12]", //app e accessori
+        //    "//*[@id=\"sectiongroup_1597799_twocolumnssection\"]", // listino
+        //    "//*[@id=\"firstlevelteasersect\"]", // scopri le nuove polo
+        //    "//*[@id=\"firstlevelteasersect\"]", // modelli e nuova polo gti
+        //    "//*[@id=\"editorialteasersecti_686435660\"]", // potrebbe interessarti
+        //    //"//*[@id=\"reactmount\"]/div/div[2]/footer", // footer
+        //    "//*[@id=\"versioni\"]", // versioni
+        //    "//*[@id=\"newslettersignupsect\"]" //maggiori informazioni
+        //};
+
+        //foreach (var item in divToRemoveList)
+        //{
+        //    RemoveDivByXPath(name, item);
+        //}
+
+        RemoveByXPath(name,"//div[@class='tag']");
+        RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI linkElement']");
+        RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI buttonsParsys']");
+        RemoveByXPath(name, "//div[@class='StyledChildWrapper-sc-1d21nde iFakPP']");
+        RemoveByXPath(name, "//div[@class='StyledLinkText-sc-12fkfup TpPRV']");
+        RemoveByXPath(name, "//div[@class='StyledButtonWrapper-cZdQgL bPwnem']");
+        RemoveByXPath(name, "//div[@class='StyledLinkWrapper-bEHVV kyDJWM']"); // freccia configuratore
+        RemoveByXPath(name, "//div[@class='NewsletterSignupSectionWraper-faZEQE bOaAQm']"); // freccia configuratore
+        RemoveByXPath(name, "//section[@id='versioni']"); // scegli la versione
+        RemoveByXPath(name, "//section[@id='newslettersignupsect_1874992862']"); // preventivo
+        RemoveByXPath(name, "//section[@id='promozioni']"); // promozioni
+        RemoveByXPath(name, "//section[@id='editorialteasersecti']"); // potrebbe interessarti
+        RemoveByXPath(name, "//section[@id='focusteasersection_1']"); // 
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_193396639']"); // ID. Buzz – L'icona di una nuova era
+        RemoveByXPath(name, "//section[@id='expandcollapsesectio']"); // le immagini coi bimbi delle elettriche
+        RemoveByXPath(name, "//section[@id='focusteasersection']"); // scopri la gamma volkswagen
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_1022890685']"); // manutenzione
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_19']"); // ID Buzz - Nuova ID3
+        
+        RemoveByXPath(name, "//span[text()='Potrebbe interessarti anche questo:']"); // Potrebbe interessarti anche questo
+
+
+        string htmlFilePath = $"../../../res/{name}/{name}.html";
+        // Load the HTML file
+        HtmlDocument doc = new HtmlDocument();
+        doc.Load(htmlFilePath);
+
+
+        HtmlNode versionDivNode = doc.DocumentNode.SelectSingleNode("//div[contains(., 'Scegli la versione')]");
+
+        // Remove the following div elements
+        if (versionDivNode != null)
+        {
+            HtmlNodeCollection followingDivs = versionDivNode.SelectNodes("following-sibling::div");
+            if (followingDivs != null)
+            {
+                foreach (HtmlNode followingDiv in followingDivs)
+                {
+                    followingDiv.Remove();
+                }
+            }
+        }
+        
+        doc.Save(htmlFilePath);
+
+
+
         //js clearance
         RemoveScriptTag(name);
         //RemoveScriptById(name, "spaModel");
@@ -427,6 +557,50 @@ class Program
         //css
         ExtractCssAndSave(name);
     }
+
+    private static void RemoveDivByXPath(string name, string divClass)
+    {
+        HtmlDocument doc = new HtmlDocument();
+        string filePath = $"../../../res/{name}/{name}.html";
+        doc.Load(filePath);
+
+        // Locate the button to remove
+        HtmlNode divToRemove = doc.DocumentNode.SelectSingleNode(divClass);
+
+        // Check if the div element exists
+        if (divToRemove != null)
+        {
+            // Remove the div element from the document
+            divToRemove.Remove();
+        }
+        else
+            Console.WriteLine($"Couldn't find divClass= {divClass}");
+
+        // Save the modified HTML document to a new file or overwrite the existing file
+        doc.Save(filePath); // Replace with the desired file path
+    }
+
+    private static void RemoveByXPath(string name, string xPath)
+    {
+        string htmlFilePath = $"../../../res/{name}/{name}.html";
+
+        // Load the HTML document from the file
+        HtmlDocument htmlDoc = new HtmlDocument();
+        htmlDoc.Load(htmlFilePath);
+
+        var divList = htmlDoc.DocumentNode.SelectNodes(xPath);
+
+        if (divList != null)
+        {
+            foreach (var divNode in divList.ToList())
+            {
+                divNode.Remove();
+            }
+        }
+
+        htmlDoc.Save(htmlFilePath);
+    }
+
 
     private static void ExtractCssAndSave(string name)
     {
@@ -443,7 +617,7 @@ class Program
         {
             //Console.WriteLine(scriptNode.InnerHtml);
 
-            Console.WriteLine(styleNode.InnerHtml);
+            //Console.WriteLine(styleNode.InnerHtml);
 
             File.AppendAllLines(cssFilePath, new string[] { styleNode.InnerHtml });
 
@@ -513,7 +687,6 @@ class Program
 
     static void RemoveConfiguratorButton(string name)
     {
-        //doesn't work
 
         HtmlDocument doc = new HtmlDocument();
         string filePath = $"../../../res/{name}/{name}.html";
@@ -590,14 +763,14 @@ class Program
             }
 
             ReadAndAppendJavaScript(scriptURL);
-            Console.WriteLine($"src: {scriptURL}");
+            //Console.WriteLine($"src: {scriptURL}");
 
             // Remove the script tag from the HTML
             scriptNode.Remove();
 
             htmlDocument.Save(htmlFilePath);
 
-            Console.WriteLine("\n\n");
+            //Console.WriteLine("\n\n");
         }
 
     }
@@ -619,12 +792,12 @@ class Program
                 writer.WriteLine(javascriptCode);
             }
 
-            Console.WriteLine("JavaScript code appended to " + outputFile);
+            //Console.WriteLine("JavaScript code appended to " + outputFile);
         }
         catch (Exception ex)
         {
-            Console.WriteLine("An error occurred while reading and appending the JavaScript code:");
-            Console.WriteLine(ex.Message);
+            //Console.WriteLine("An error occurred while reading and appending the JavaScript code:");
+            //Console.WriteLine(ex.Message);
         }
     }
 
