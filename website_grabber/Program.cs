@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Channels;
@@ -12,6 +13,13 @@ class Program
 {
     static async Task Main()
     {
+
+        var client = new HttpClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://www.volkswagen.it/it/modelli/up.html");
+        var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        Console.WriteLine(await response.Content.ReadAsStringAsync());
+        var a = await response.Content.ReadAsStringAsync();
 
         string url = "https://www.volkswagen.it/it/modelli/up.html";
         string name = url.Split('.').ToArray()[1]; ;
@@ -30,7 +38,7 @@ class Program
 
 
         // get images
-        // await GetAllImages(url, name);
+        //await GetAllImages(url, name);
         var urlsList = await GetAllImagesURLs(name);
         await GetAllImagesNames(name);
         int counter = 0;
@@ -50,9 +58,43 @@ class Program
 
 
 
-        await DownloadJavaScriptAndRemoveTagAsync(url);
+        //await DownloadJavaScriptAndRemoveTagAsync(url);
+
+        AddScriptTag(name);
+
+
     }
 
+    private static void AddScriptTag(string name)
+    {
+        Console.WriteLine("Adding script tag");
+        string htmlFilePath = $"../../../res/{name}/{name}.html";
+        string jsFilePath = $"../../../res/{name}/script.js";
+        HtmlDocument htmlDocument = new HtmlDocument();
+        htmlDocument.Load(htmlFilePath);
+
+        // Create a new script element
+        HtmlNode scriptTag = htmlDocument.CreateElement("script");
+
+        // Set the src attribute to "script.js"
+        scriptTag.SetAttributeValue("src", "script.js");
+
+        // Read script.js code
+        //string scriptContent = File.ReadAllText(jsFilePath);
+
+        //Console.WriteLine(scriptContent);
+
+        // Writing script into the tag
+        //scriptTag.InnerHtml = scriptContent;
+
+        // Append the script tag to the HTML document
+        HtmlNode headNode = htmlDocument.DocumentNode.SelectSingleNode("//body");
+        headNode.AppendChild(scriptTag);
+
+
+        // Save the modified HTML document
+        htmlDocument.Save(htmlFilePath);
+    }
 
     static async Task<string> DownloadJavaScriptAndRemoveTagAsync(string pageUrl)
     {
@@ -121,7 +163,7 @@ class Program
             }
             else if(linkString.StartsWith("https:"))
             {
-                await Console.Out.WriteLineAsync(linkString);
+                //await Console.Out.WriteLineAsync(linkString);
                 imagesUrlsList.Add(linkString);
             }
         }
@@ -172,7 +214,7 @@ class Program
         if (!Directory.Exists(directoryPath))
         {
             Directory.CreateDirectory(directoryPath);
-            Console.WriteLine("Directory created: " + directoryPath);
+            //Console.WriteLine("Directory created: " + directoryPath);
         }
 
         using (HttpClient client = new HttpClient())
@@ -191,13 +233,13 @@ class Program
                     }
                     else
                     {
-                        Console.WriteLine($"Failed to download image. Status code: {response.StatusCode}");
+                        //Console.WriteLine($"Failed to download image. Status code: {response.StatusCode}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred while downloading the image: {ex.Message}");
+                //Console.WriteLine($"An error occurred while downloading the image: {ex.Message}");
             }
         }
     }
@@ -225,7 +267,7 @@ class Program
 
                 // Set the alt value as the new src attribute value
                 imgTag.SetAttributeValue("src", $"img\\{modifiedString}.png");
-                Console.WriteLine($"img\\{modifiedString}.png");
+                //Console.WriteLine($"img\\{modifiedString}.png");
             }
 
             // Get the modified HTML content
@@ -236,7 +278,7 @@ class Program
         else
         {
             // Handle the case when the file doesn't exist
-            Console.WriteLine("File doesn't exist");
+            //Console.WriteLine("File doesn't exist");
         }
     }
 
@@ -314,10 +356,15 @@ class Program
 
     static async Task<string> DownloadContentAsync(string url)
     {
-        using (HttpClient client = new HttpClient())
-        {
-            return await client.GetStringAsync(url);
-        }
+        var client = new HttpClient();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        Console.WriteLine(await response.Content.ReadAsStringAsync());
+        return await response.Content.ReadAsStringAsync();
+
+        
     }
 
     static async Task<string> DownloadCssAsync(string htmlContent, string baseUrl)
@@ -338,13 +385,14 @@ class Program
     
     static async Task DownloadPageAsync(string url, string name)
     {
+
         var htmlContent = await DownloadContentAsync(url);
         var cssContent = await DownloadCssAsync(htmlContent, url);
         var jsContent = await DownloadJavaScriptAsync(htmlContent, url);
 
-        await Console.Out.WriteLineAsync($"HTML: {htmlContent}");
-        await Console.Out.WriteLineAsync($"CSS: {cssContent}");
-        await Console.Out.WriteLineAsync($"JS: {jsContent}");
+        //await Console.Out.WriteLineAsync($"HTML: {htmlContent}");
+        //await Console.Out.WriteLineAsync($"CSS: {cssContent}");
+        //await Console.Out.WriteLineAsync($"JS: {jsContent}");
 
         await Console.Out.WriteLineAsync("Done!");
 
@@ -370,7 +418,57 @@ class Program
         RewriteHtmlImgTags(name);
 
         //js clearance
-        RemoveScriptById(name, "spaModel");
+        RemoveScriptTag(name);
+        //RemoveScriptById(name, "spaModel");
+
+
+
+
+        //css
+        ExtractCssAndSave(name);
+    }
+
+    private static void ExtractCssAndSave(string name)
+    {
+        // saves css to styles.css
+        // removes style tags
+        // add single single link tag to link css file
+        string htmlFilePath = $"../../../res/{name}/{name}.html";
+        string cssFilePath = $"../../../res/{name}/styles.css";
+
+        HtmlDocument htmlDocument = new HtmlDocument();
+        htmlDocument.Load(htmlFilePath);
+
+        foreach (HtmlNode styleNode in htmlDocument.DocumentNode.Descendants("style").ToList())
+        {
+            //Console.WriteLine(scriptNode.InnerHtml);
+
+            Console.WriteLine(styleNode.InnerHtml);
+
+            File.AppendAllLines(cssFilePath, new string[] { styleNode.InnerHtml });
+
+            styleNode.Remove();
+
+            Console.WriteLine("\n\n\n\n\n\n");
+
+            htmlDocument.Save(htmlFilePath);
+        }
+
+
+        HtmlNode linkNode = HtmlNode.CreateNode("<link rel=\"stylesheet\" type=\"text/css\" href=\"styles.css\" />");
+
+        HtmlNode headNode = htmlDocument.DocumentNode.SelectSingleNode("//head");
+        if (headNode != null)
+        {
+            headNode.AppendChild(linkNode);
+        }
+        else
+        {
+            htmlDocument.DocumentNode.AppendChild(linkNode);
+        }
+
+        // Save the modified HTML document
+        htmlDocument.Save(htmlFilePath);
     }
 
     static void RemoveFooter(string name)
@@ -463,28 +561,72 @@ class Program
         doc.Save(filePath); // Replace with the desired file path
     }
 
-    static void RemoveScriptById(string name, string scriptId)
+    static void RemoveScriptTag(string name)
     {
-        //doesn't work
+        string htmlFilePath = "../../../res/volkswagen/volkswagen.html";
 
-        HtmlDocument doc = new HtmlDocument();
-        string filePath = $"../../../res/{name}/{name}.html";
-        doc.Load(filePath);
+        HtmlDocument htmlDocument = new HtmlDocument();
+        htmlDocument.Load(htmlFilePath);
 
-        // Locate the nav to remove
-        HtmlNode scriptTag = doc.GetElementbyId(scriptId);
-
-        // Check if the nav element exists
-        if (scriptTag != null)
+        foreach (HtmlNode scriptNode in htmlDocument.DocumentNode.Descendants("script").ToList())
         {
-            // Remove the nav element from the document
-            scriptTag.Remove();
+            //Console.WriteLine(scriptNode.InnerHtml);
+
+            // Print the content of the src attribute
+            string srcValue = scriptNode.GetAttributeValue("src", "");
+            string scriptURL = null!;
+            if (srcValue.StartsWith("//"))
+            {
+                scriptURL = $"https:{srcValue}";
+            }
+            else if (srcValue.StartsWith("/idhub"))
+            {
+                scriptURL = $"https://volkswagen.it{srcValue}";
+            }
+            else
+            {
+                Console.WriteLine("Skipping appending, already in html file");
+                continue;
+            }
+
+            ReadAndAppendJavaScript(scriptURL);
+            Console.WriteLine($"src: {scriptURL}");
+
+            // Remove the script tag from the HTML
+            scriptNode.Remove();
+
+            htmlDocument.Save(htmlFilePath);
+
+            Console.WriteLine("\n\n");
         }
 
-        // Save the modified HTML document to a new file or overwrite the existing file
-        doc.Save(filePath); // Replace with the desired file path
     }
 
+
+    static public void ReadAndAppendJavaScript(string url)
+    
+    {
+        WebClient client = new WebClient();
+        string outputFile = "../../../res/volkswagen/script.js";
+
+        try
+        {
+            string javascriptCode = client.DownloadString(url);
+
+            // Append the JavaScript code to the output file
+            using (StreamWriter writer = File.AppendText(outputFile))
+            {
+                writer.WriteLine(javascriptCode);
+            }
+
+            Console.WriteLine("JavaScript code appended to " + outputFile);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while reading and appending the JavaScript code:");
+            Console.WriteLine(ex.Message);
+        }
+    }
 
     static async Task<string> DownloadJavaScriptAsync(string htmlContent, string baseUrl)
     {
