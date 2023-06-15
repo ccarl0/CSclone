@@ -44,6 +44,7 @@ class Program
 
         // get images
         //await GetAllImages(url, name);
+
         //var urlsList = await GetAllImagesURLs(name);
         //await GetAllImagesNames(name);
         //int counter = 0;
@@ -54,7 +55,7 @@ class Program
         //    counter++;
         //}
 
-        // clean html
+        //clean html
         // remove: header, footer, configuration button, nav bar
         // rewrites srcs
         CleanHtml(name);
@@ -500,9 +501,9 @@ class Program
         //}
 
         RemoveByXPath(name,"//div[@class='tag']");
-        RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI linkElement']");
-        RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI buttonsParsys']");
-        RemoveByXPath(name, "//div[@class='StyledChildWrapper-sc-1d21nde iFakPP']");
+        //RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI linkElement']");
+        //RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI buttonsParsys']");
+        RemoveByXPath(name, "//div[@class='StyledEditorialTeaserWrapper-hJLpMs uJNJF']"); // potrebbe interessarti anche questo
         RemoveByXPath(name, "//div[@class='StyledLinkText-sc-12fkfup TpPRV']");
         RemoveByXPath(name, "//div[@class='StyledButtonWrapper-cZdQgL bPwnem']");
         RemoveByXPath(name, "//div[@class='StyledLinkWrapper-bEHVV kyDJWM']"); // freccia configuratore
@@ -516,9 +517,79 @@ class Program
         RemoveByXPath(name, "//section[@id='expandcollapsesectio']"); // le immagini coi bimbi delle elettriche
         RemoveByXPath(name, "//section[@id='focusteasersection']"); // scopri la gamma volkswagen
         RemoveByXPath(name, "//section[@id='sectiongroup_copy_1022890685']"); // manutenzione
+        RemoveByXPath(name, "//section[@id='sectiongroup_1597799_1691029286_twocolumnssection']"); // manutenzione
+        RemoveByXPath(name, "//section[@id='download']"); // listino e dimensioni up
+        RemoveByXPath(name, "//section[@id='editorialteasersecti_686435660']"); // listino e dimensioni Polo TGI 
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co']"); // scopri le up in pronta consegna 
+        RemoveByXPath(name, "//section[@id='highlightfeaturesect']"); // accessori originiali up
+        RemoveByXPath(name, "//section[@id='app-accessori']"); // accessori originiali polo
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_965766936']"); // scopri le nuove polo in pronta consegna
+        RemoveByXPath(name, "//section[@id='firstlevelteasersect']"); // nuova polo GRI - nouva polo
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1473804984']"); // scopri le nuove polo GTI in pronta consegna
+        RemoveByXPath(name, "//section[@id='sectiongroup_160092087_twocolumnssection']"); // pianificatore e route - nuova id3
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_10']"); // manutenzione - nuova id3
+
+        RemoveByXPath(name, "//section[@id='powerteasersection']"); // Sei pronto per la mobilità elettrica - id3
 
         RemoveByXPath(name, "//section[@id='sectiongroup_copy_19']"); // ID Buzz - Nuova ID3
-        
+        RemoveByXPath(name, "//section[@id='twocolumnssection']"); // Passa alla mobilità elettrica - Nuova ID3
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_288746464']"); // scopri id3 in pronta consegna - Nuova ID3
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1151710981']"); // Scopri le Golf 8 in pronta consegna! - golf 8
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_2089911995']"); // attiva weconnect - golf 8 eHybrid
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_613358248']"); // Scopri le Golf 8 eHybrid in pronta consegna! - golf 8 eHybrid
+        RemoveByXPath(name, "//section[@id='gamma']"); // Scopri gli altri modelli della gamma Golf 8 - golf 8 eHybrid
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1898709743']"); // Scopri le Golf 8 GTI in pronta consegna! - golf 8 GTI
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1730437561']"); // Scopri le Golf 8 GTD in pronta consegna! - golf 8 GTD
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_152972141']"); // Scopri le Golf 8 GTE in pronta consegna! - golf 8 GTE
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_954301293']"); // Scopri le Golf 8 R in pronta consegna! - golf 8 R
+        RemoveByXPath(name, "//section[@id='sectiongroup_1595352']"); // Potrebbe interessarti anche questo: - golf 8 R
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_478381832']"); // Scopri le T‑Cross in pronta consegna! - T‑Cross
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_540207698']"); // Scopri le Taigo in pronta consegna! - Taigo
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1846930536']"); // Accessori Originali - Taigo
+
+        RemoveByXPath(name, "//section[@id='accessori']"); // Accessori Originali - nuovo T-Roc
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1265106997']"); // attiva weconnect - Tiguan
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_945866001']"); // Scopri le Tiguan in pronta consegna! - Tiguan
+
+        RemoveByXPath(name, "//a[@href='https://vw.elli.eco/it-IT/shop/id-charger' and @target='_self' and contains(@class, 'StyledLink-sc-afbv6g')]"); // ID. Charger Online Shop - Tiguan eHybrid
+        RemoveByXPath(name, "//section[@id='sectiongroup_1863522997']"); // Rivoluzionaria per natura - Tiguan eHybrid
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_785219142']"); // We Connect - Tiguan eHybrid
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1477678683']"); // Scopri le Tiguan eHybrid in pronta consegna!  - Tiguan eHybrid
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1325733698']"); // Scopri le Tiguan Allspace in pronta consegna!  - Tiguan Allspace
+
+        RemoveByXPath(name, "//section[@id='powerteasersection_c']"); // Scopri We Connect Start - ID.4 
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy']"); // idbuzz - ID.4 
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1576032507']"); // scopri le cose in pronta consegna - ID.4 
+        RemoveByXPath(name, "//section[@id='VW-Servizi-Finanziari']"); // servizi finanziari - ID.4 
+        RemoveByXPath(name, "//section[@id='sectiongroup']"); // manutenzione - ID.4 
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_476344241']"); // passa alla mobilità elettrica - ID.4 GTX 4MOTION
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_1604267514']"); // id coso - ID.4 GTX 4MOTION
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_199596178']"); // manutenzione - ID.4 GTX 4MOTION
+        RemoveByXPath(name, "//section[@id='editorialteasersecti_1974484785']"); // area clienti - ID.4 GTX 4MOTION
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_959684686']"); // id coso - ID.5
+        RemoveByXPath(name, "//section[@id='featureclustersectio']"); // modelli della gamma - ID.5
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1413467696']"); // accessori originali - ID.5
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_384789379']"); // id coso - ID.5
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1945863602']"); // accessori - ID.5
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1707616415']"); // Scopri le Golf 8 Variant Alltrack in pronta consegna! - Golf 8 variant
+
+
+
+
         RemoveByXPath(name, "//span[text()='Potrebbe interessarti anche questo:']"); // Potrebbe interessarti anche questo
 
 
