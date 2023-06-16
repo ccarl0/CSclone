@@ -83,6 +83,9 @@ internal class Program
         string name = GetNameFromUrlAsync(url);
         SaveHtmlContentAsync(content, name);
 
+        // grab js
+        await SaveJsContentAsync(content, url, name);
+
         await browser.CloseAsync();
     }
 
@@ -96,7 +99,68 @@ internal class Program
         string htmlFilePath = $"../../../res/{name}/{name}.html";
         
         Directory.CreateDirectory($"../../../res/{name}");
-        htmlContent = htmlContent.Replace("style=\"opacity:0\"", "");
+        htmlContent = htmlContent.Replace("style=\"opacity:0\"", ""); // not definitive
         File.WriteAllText(htmlFilePath, htmlContent);
+    }
+
+
+
+    private static async Task SaveJsContentAsync(string content, string url, string name)
+    {
+        string jsFilePath = $"../../../res/{name}/script.js";
+        var jsContent = await DownloadJavaScriptAsync(content, url);
+        File.WriteAllText(jsFilePath, jsContent);
+    }
+
+
+    static async Task<string> DownloadJavaScriptAsync(string htmlContent, string baseUrl)
+    {
+        string javascriptUrl = ExtractJavaScriptUrl(htmlContent);
+        if (!string.IsNullOrEmpty(javascriptUrl))
+        {
+            if (!Uri.IsWellFormedUriString(javascriptUrl, UriKind.Absolute))
+            {
+                javascriptUrl = new Uri(new Uri(baseUrl), javascriptUrl).AbsoluteUri;
+            }
+            return await DownloadContentAsync(javascriptUrl);
+        }
+
+        return string.Empty;
+    }
+
+    static string ExtractJavaScriptUrl(string htmlContent)
+    {
+
+        int startIndex = htmlContent.IndexOf("<script src=\"");
+        if (startIndex != -1)
+        {
+            startIndex += "<script src=\"".Length;
+            int endIndex = htmlContent.IndexOf("\"", startIndex);
+            if (endIndex != -1)
+            {
+                Console.WriteLine(htmlContent.Substring(startIndex, endIndex - startIndex));
+                return htmlContent.Substring(startIndex, endIndex - startIndex);
+            }
+        }
+
+        return string.Empty;
+    }
+    static async Task<string> DownloadContentAsync(string url)
+    {
+
+        
+        // da fare con l'headless
+
+
+
+
+
+        var client = new HttpClient();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        await Console.Out.WriteLineAsync(url);
+        var response = await client.SendAsync(request);
+        //Console.WriteLine(await response.Content.ReadAsStringAsync());
+        return await response.Content.ReadAsStringAsync();
     }
 }
