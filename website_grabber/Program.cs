@@ -27,7 +27,7 @@ class Program
         //string url = "https://www.volkswagen.it/it/modelli/id3.html";
         Console.WriteLine("Input url");
         string url = Console.ReadLine();
-        string name = url.Split('.').ToArray()[1]; ;
+        string name = url.Split('/').Last().Split(".").First();
         await Console.Out.WriteLineAsync($"URL: {url}");
         await Console.Out.WriteLineAsync($"\n\nName: {name}");
 
@@ -45,15 +45,15 @@ class Program
         // get images
         //await GetAllImages(url, name);
 
-        //var urlsList = await GetAllImagesURLs(name);
-        //await GetAllImagesNames(name);
-        //int counter = 0;
-        //foreach (var item in urlsList)
-        //{
-        //    await Console.Out.WriteLineAsync($"Downlaoding {item}");
-        //    await DownloadImage(item, name, counter);
-        //    counter++;
-        //}
+        var urlsList = await GetAllImagesURLs(name);
+        await GetAllImagesNames(name);
+        int counter = 0;
+        foreach (var item in urlsList)
+        {
+            await Console.Out.WriteLineAsync($"Downlaoding {item}");
+            await DownloadImage(item, name, counter);
+            counter++;
+        }
 
         //clean html
         // remove: header, footer, configuration button, nav bar
@@ -396,10 +396,6 @@ class Program
         var cssContent = await DownloadCssAsync(htmlContent, url);
         var jsContent = await DownloadJavaScriptAsync(htmlContent, url);
 
-        //await Console.Out.WriteLineAsync($"HTML: {htmlContent}");
-        //await Console.Out.WriteLineAsync($"CSS: {cssContent}");
-        //await Console.Out.WriteLineAsync($"JS: {jsContent}");
-
         await Console.Out.WriteLineAsync("Done!");
 
 
@@ -423,91 +419,15 @@ class Program
         RemoveNav(name);
         RewriteHtmlImgTags(name);
 
-        //List<string> divToRemoveList = new List<string>
-        //{
-        //    "//*[@id=\"reactmount\"]/div/div[1]/div/div[2]/div", // header
-        //    "//*[@id=\"stage_copy\"]/div/div[2]/div[3]", //richiedi preventivo button
-        //    "//*[@id=\"cartechnicaldatasect_1698030854\"]/div/div", //configura button
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[1]/div", //promozioni
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[4]/div[2]/div[3]", // scopri i sistemi di assistenza button
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[3]/div[5]", // scopri i fari button
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[6]/div/div[3]", // scopri di più cockpit button
-        //    "//*[@id=\"sectiongroup_7104651_powerteasersection_c\"]/div/div/div[6]", // scopri i sistemi di assistenza button
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[8]", // Nuova Polo TGI a metano
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[9]", //  scegli la versione
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[10]", // mobilità metano
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[11]", // maggiori informazioni
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[12]", //app e accessori
-        //    "//*[@id=\"sectiongroup_1597799_twocolumnssection\"]", // listino
-        //    "//*[@id=\"firstlevelteasersect\"]", // scopri le nuove polo
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[15]", // modelli e nuova polo gti
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[16]", // potrebbe interessarti
-        //    "//*[@id=\"reactmount\"]/div/div[2]", // footer
-        //    "//*[@id=\"versioni\"]", // versioni
-        //    "//*[@id=\"newslettersignupsect\"]" //maggiori informazioni
-        //};
-
-        //List<string> divToRemoveList = new List<string>
-        //{
-        //    "//*[@id=\"reactmount\"]/div/div[1]/div/div[2]/div", // header
-        //    "//*[@id=\"stage_copy\"]/div/div[2]/div[3]", //richiedi preventivo button
-        //    "//*[@id=\"cartechnicaldatasect_1698030854\"]/div/div", //configura button
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[1]/div", //promozioni
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[4]/div[2]/div[3]", // scopri i sistemi di assistenza button
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[3]/div[5]", // scopri i fari button
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[6]/div/div[3]", // scopri di più cockpit button
-        //    "//*[@id=\"sectiongroup_7104651_powerteasersection_c\"]/div/div/div[6]", // scopri i sistemi di assistenza button
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[8]", // Nuova Polo TGI a metano
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[9]", //  scegli la versione
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[10]", // mobilità metano
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[11]", // maggiori informazioni
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[12]", //app e accessori
-        //    "//*[@id=\"sectiongroup_1597799_twocolumnssection\"]", // listino
-        //    "//*[@id=\"firstlevelteasersect\"]", // scopri le nuove polo
-        //    "//*[@id=\"firstlevelteasersect\"]", // modelli e nuova polo gti
-        //    "//*[@id=\"editorialteasersecti_686435660\"]", // potrebbe interessarti
-        //    //"//*[@id=\"reactmount\"]/div/div[2]/footer", // footer
-        //    "//*[@id=\"versioni\"]", // versioni
-        //    "//*[@id=\"newslettersignupsect\"]" //maggiori informazioni
-        //};
-
-        //List<string> PathToRemoveList = new List<string>
-        //{
-        //    "//*[@id=\"reactmount\"]/div/div[1]/div/div[2]/div", // header
-        //    "//*[@id=\"stage_copy\"]/div/div[2]/div[3]", //richiedi preventivo button
-        //    "//*[@id=\"cartechnicaldatasect_1698030854\"]/div/div", //configura button
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[1]/div", //promozioni
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[4]/div[2]/div[3]", // scopri i sistemi di assistenza button
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[3]/div[5]", // scopri i fari button
-        //    "//*[@id=\"sectiongroup_1037184_uspsection_194170196\"]/div[2]/div/div[6]/div/div[3]", // scopri di più cockpit button
-        //    "//*[@id=\"sectiongroup_7104651_powerteasersection_c\"]/div/div/div[6]", // scopri i sistemi di assistenza button
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[8]", // Nuova Polo TGI a metano
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[9]", //  scegli la versione
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[10]", // mobilità metano
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[11]", // maggiori informazioni
-        //    "//*[@id=\"reactmount\"]/div/div[1]/main/div/div/div[2]/div/div/div/div/div/div/div[12]", //app e accessori
-        //    "//*[@id=\"sectiongroup_1597799_twocolumnssection\"]", // listino
-        //    "//*[@id=\"firstlevelteasersect\"]", // scopri le nuove polo
-        //    "//*[@id=\"firstlevelteasersect\"]", // modelli e nuova polo gti
-        //    "//*[@id=\"editorialteasersecti_686435660\"]", // potrebbe interessarti
-        //    //"//*[@id=\"reactmount\"]/div/div[2]/footer", // footer
-        //    "//*[@id=\"versioni\"]", // versioni
-        //    "//*[@id=\"newslettersignupsect\"]" //maggiori informazioni
-        //};
-
-        //foreach (var item in divToRemoveList)
-        //{
-        //    RemoveDivByXPath(name, item);
-        //}
+        
 
         RemoveByXPath(name,"//div[@class='tag']");
-        //RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI linkElement']");
-        //RemoveByXPath(name, "//div[@class='StyledEditableComponent-cfYJPD iBZONI buttonsParsys']");
         RemoveByXPath(name, "//div[@class='StyledEditorialTeaserWrapper-hJLpMs uJNJF']"); // potrebbe interessarti anche questo
         RemoveByXPath(name, "//div[@class='StyledLinkText-sc-12fkfup TpPRV']");
         RemoveByXPath(name, "//div[@class='StyledButtonWrapper-cZdQgL bPwnem']");
         RemoveByXPath(name, "//div[@class='StyledLinkWrapper-bEHVV kyDJWM']"); // freccia configuratore
         RemoveByXPath(name, "//div[@class='NewsletterSignupSectionWraper-faZEQE bOaAQm']"); // freccia configuratore
+        
         RemoveByXPath(name, "//section[@id='versioni']"); // scegli la versione
         RemoveByXPath(name, "//section[@id='newslettersignupsect_1874992862']"); // preventivo
         RemoveByXPath(name, "//section[@id='promozioni']"); // promozioni
@@ -572,6 +492,8 @@ class Program
         RemoveByXPath(name, "//section[@id='twocolumnssection_co_1576032507']"); // scopri le cose in pronta consegna - ID.4 
         RemoveByXPath(name, "//section[@id='VW-Servizi-Finanziari']"); // servizi finanziari - ID.4 
         RemoveByXPath(name, "//section[@id='sectiongroup']"); // manutenzione - ID.4 
+        RemoveByXPath(name, "//span[contains(concat(' ', normalize-space(@class), ' '), ' StyledRichtextComponent-jWRnMY jlOXFF ')]"); // Pensata in grande: - ID.4 
+        RemoveByXPath(name, "//a[@title='Richiedi preventivo' and @href='https://www.volkswagen.it/app/dccforms/vw-it/preventivo/it/modelselector/31200/+/+/+/+/+/carline/+/+/+/+/+/+/+' and @target='_self' and contains(@class, 'StyledButton-sc-1208ax7') and contains(@class, 'iVMxmz')]"); // Richiedi preventivo: - ID.4 
 
         RemoveByXPath(name, "//section[@id='twocolumnssection_co_476344241']"); // passa alla mobilità elettrica - ID.4 GTX 4MOTION
         RemoveByXPath(name, "//section[@id='sectiongroup_copy_1604267514']"); // id coso - ID.4 GTX 4MOTION
@@ -585,7 +507,54 @@ class Program
         RemoveByXPath(name, "//section[@id='sectiongroup_copy_384789379']"); // id coso - ID.5
         RemoveByXPath(name, "//section[@id='twocolumnssection_co_1945863602']"); // accessori - ID.5
 
-        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1707616415']"); // Scopri le Golf 8 Variant Alltrack in pronta consegna! - Golf 8 variant
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1707616415']"); // Scopri le Golf 8 Variant Alltrack in pronta consegna! - Golf 8 variant Alltrack
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1306978135']"); // Scopri le Golf 8 Variant in pronta consegna! - Golf 8 variant
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1451156338']"); // Scopri le Golf 8 Variant eTSI in pronta consegna! - Golf 8 Variant eTSI
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1373176180']"); // We Connect - Passat Variant
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1893547274']"); // Scopri le Passat Variant in pronta consegna! - Passat Variant
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1809743779']"); // Scopri le Passat Alltrack in pronta consegna! - Passat Alltrack
+
+        RemoveByXPath(name, "//section[@id='twocolumnssection_co_1159158138']"); // Scopri le Touran in pronta consegna! - Touran
+
+        // inutile ID Buzz
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co_358748358_powerteasersection_c']"); // Scegli la promozione perfetta per te. - ID. Buzz
+        RemoveByXPath(name, "//section[@id='scegli-la-versione']"); // Scegli una versione - ID. Buzz
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co']"); // È tempo per una nuova epoca - ID. Buzz
+        RemoveByXPath(name, "//section[@id='highlightteasersecti']"); // richiedi preventivo - ID. Buzz
+
+        //commerciali
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co_933231009']"); // promozioni cargo - caddy cargo
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co_1293155987']"); // promozioni - Transporter
+
+        RemoveByXPath(name, "//section[@id='chargeyourbrand']"); // charge your brand - buzz cargo
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co_1592285793']"); // promozioni - crafter
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co_1589095349']"); // promozioni - kombi
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co_1456400187_powerteasersection_c']"); // promozioni - caddy
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co']"); // promozioni - caravelle
+
+        RemoveByXPath(name, "//section[@id='sectiongroup_5370189']"); // di più - multivan
+        RemoveByXPath(name, "//section[@id='focusteasersection_c']"); // Benvenuti nel mondo di Multivan - multivan
+        RemoveByXPath(name, "//p[contains(text(), 'Fonte')]"); // fonte - multivan
+
+        RemoveByXPath(name, "//section[@id='singlecolumnsection' and descendant::a]"); // benvenuto in famiglia - caddy
+
+        RemoveByXPath(name, "//section[@id='headingsection_copy']"); // Promozioni - California
+
+        RemoveByXPath(name, "//section[@id='focusteasersection_7903804']"); // Porta tutto sulla strada - transporter camioncino
+
+        RemoveByXPath(name, "//section[@id='textonlyteasersectio']"); // Di più - Amarok
+
+        RemoveByXPath(name, "//section[@id='scegli-la-versione']"); // Scegli una versione - Grand California
+        RemoveByXPath(name, "//section[@id='sectiongroup_copy_co_headingsection']"); // promozioni - Grand California
 
 
 
@@ -807,7 +776,7 @@ class Program
 
     static void RemoveScriptTag(string name)
     {
-        string htmlFilePath = "../../../res/volkswagen/volkswagen.html";
+        string htmlFilePath = $"../../../res/{name}/{name}.html";
 
         HtmlDocument htmlDocument = new HtmlDocument();
         htmlDocument.Load(htmlFilePath);

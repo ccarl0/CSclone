@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="res\volkswagen-veicolicommerciali\img\Un dettaglio del bagno del Grand California di Volkswagen Veicoli Commerciali. Il pratico lavabo è estratto. All’interno sono presenti la doccetta, uno spazzolino da denti per bambini e un giocattolo colorato..png\**" />
+    <EmbeddedResource Remove="res\volkswagen-veicolicommerciali\img\Un dettaglio del bagno del Grand California di Volkswagen Veicoli Commerciali. Il pratico lavabo è estratto. All’interno sono presenti la doccetta, uno spazzolino da denti per bambini e un giocattolo colorato..png\**" />
+    <None Remove="res\volkswagen-veicolicommerciali\img\Un dettaglio del bagno del Grand California di Volkswagen Veicoli Commerciali. Il pratico lavabo è estratto. All’interno sono presenti la doccetta, uno spazzolino da denti per bambini e un giocattolo colorato..png\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
     <PackageReference Include="PuppeteerSharp" Version="10.0.0" />
   </ItemGroup>
