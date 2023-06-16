@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -17,28 +18,57 @@ class Program
     static async Task Main()
     {
 
-        //var client = new HttpClient();
-        //var request = new HttpRequestMessage(HttpMethod.Get, "https://www.volkswagen.it/it/modelli/nuova-polo.html");
-        //var response = await client.SendAsync(request);
-        //response.EnsureSuccessStatusCode();
-        //Console.WriteLine(await response.Content.ReadAsStringAsync());
-        //var a = await response.Content.ReadAsStringAsync();
+        string modelsPathString = "../../../assets/models.txt";
 
-        //string url = "https://www.volkswagen.it/it/modelli/id3.html";
-        Console.WriteLine("Input url");
-        string url = Console.ReadLine();
+        List<string> modelsURIList = new List<string>();
+
+        try
+        {
+            modelsURIList = File.ReadAllLines(modelsPathString).ToList();
+        }
+        catch (FileNotFoundException)
+        {
+            Console.WriteLine($"File not found: {modelsPathString}");
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"An error occurred while reading the file: {ex.Message}");
+        }
+
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
+        List<Task> tasks = new List<Task>();
+
+        Parallel.ForEach(modelsURIList, async url => 
+        {
+            Task task = Task.Run(async () =>
+            {
+                await RunMainLoopAsync(url);
+            });
+            tasks.Add(task);
+        });
+
+        await Task.WhenAll(tasks);
+        stopwatch.Stop();
+
+        Console.WriteLine("Downloaded all websites");
+        Console.WriteLine($"Total execution time: {stopwatch.Elapsed}");
+    }
+
+    private static async Task RunMainLoopAsync(string url)
+    {
         string name = url.Split('/').Last().Split(".").First();
-        await Console.Out.WriteLineAsync($"URL: {url}");
-        await Console.Out.WriteLineAsync($"\n\nName: {name}");
+        //await Console.Out.WriteLineAsync($"URL: {url}");
+        //await Console.Out.WriteLineAsync($"\n\nName: {name}");
 
         // downlaod html + stuff
-        await Console.Out.WriteLineAsync($"\n\nGetting HTML CSS and JS");
+        //await Console.Out.WriteLineAsync($"\n\nGetting HTML CSS and JS");
         await DownloadPageAsync(url, name);
 
 
 
         // get models url
-        await Console.Out.WriteLineAsync("\n\nGetting models href");
+        //await Console.Out.WriteLineAsync("\n\nGetting models href");
         await GetModels(name);
 
 
@@ -50,7 +80,7 @@ class Program
         int counter = 0;
         foreach (var item in urlsList)
         {
-            await Console.Out.WriteLineAsync($"Downlaoding {item}");
+            //await Console.Out.WriteLineAsync($"Downlaoding {item}");
             await DownloadImage(item, name, counter);
             counter++;
         }
@@ -67,13 +97,11 @@ class Program
         //await DownloadJavaScriptAndRemoveTagAsync(url);
 
         AddScriptTag(name);
-
-
     }
 
     private static void AddScriptTag(string name)
     {
-        Console.WriteLine("Adding script tag");
+        //Console.WriteLine("Adding script tag");
         string htmlFilePath = $"../../../res/{name}/{name}.html";
         string jsFilePath = $"../../../res/{name}/script.js";
         HtmlDocument htmlDocument = new HtmlDocument();
@@ -365,7 +393,9 @@ class Program
         var client = new HttpClient();
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
+        await Console.Out.WriteLineAsync(url);
         var response = await client.SendAsync(request);
+        await Console.Out.WriteLineAsync($"Done! {url}");
         response.EnsureSuccessStatusCode();
         //Console.WriteLine(await response.Content.ReadAsStringAsync());
         return await response.Content.ReadAsStringAsync();
@@ -396,7 +426,7 @@ class Program
         var cssContent = await DownloadCssAsync(htmlContent, url);
         var jsContent = await DownloadJavaScriptAsync(htmlContent, url);
 
-        await Console.Out.WriteLineAsync("Done!");
+        //await Console.Out.WriteLineAsync("Done!");
 
 
         string htmlFilePath = $"../../../res/{name}/{name}.html";
@@ -614,7 +644,7 @@ class Program
             divToRemove.Remove();
         }
         else
-            Console.WriteLine($"Couldn't find divClass= {divClass}");
+            //Console.WriteLine($"Couldn't find divClass= {divClass}");
 
         // Save the modified HTML document to a new file or overwrite the existing file
         doc.Save(filePath); // Replace with the desired file path
@@ -663,7 +693,7 @@ class Program
 
             styleNode.Remove();
 
-            Console.WriteLine("\n\n\n\n\n\n");
+            //Console.WriteLine("\n\n\n\n\n\n");
 
             htmlDocument.Save(htmlFilePath);
         }
