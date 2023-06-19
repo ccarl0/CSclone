@@ -66,14 +66,16 @@ internal class Program
 
     static async Task GetPageHeadlessAsync(string url, PuppeteerSharp.IBrowser browser)
     {
-        var pages = await browser.PagesAsync();
-        var page = await pages.First().GoToAsync(url);
+        var page = await browser.NewPageAsync();
+        await page.GoToAsync(url);
 
+        //var page = await pages.First().GoToAsync(url);
 
-        Thread.Sleep(10000);
+        
+        //Thread.Sleep(10000);
         await Console.Out.WriteLineAsync( "10 seconds passed ");
-        var content = await page.TextAsync();
-
+        
+        var content = await page.GetContentAsync();
 
         //Console.WriteLine(content);
         string name = GetNameFromUrlAsync(url);
@@ -110,7 +112,8 @@ internal class Program
 
 
         List<string> xpaths = new List<string>
-        { "//*[@id='stats']/div/div/section/div[1]/div[2]/div[4]",
+        { "//a[@data-autoid='pdpSubmenu:cta']",
+          "//*[@id='stats']/div/div/section/div[1]/div[2]/div[4]",
           "//*[@id='colorSelector']/div/div/section[1]/div[4]",
           "//*[@id='colorSelector']/div/div/section[2]",
           "//*[@id='__next']/div/div[15]/div/div/section",
@@ -120,7 +123,9 @@ internal class Program
           "//*[@id='imageWithTextAndMarketingLinks']",
           "//*[@id='levelComparison']",
           "//*[@id='vcc-site-footer-shadow-container']",
-          "//*[@id='sitenav:topbar']" };
+          "//*[@id='sitenav:topbar']",
+          //"//*[@id='colorSelector']",
+          "//*[@id='onetrust-consent-sdk']" };
 
         foreach (var xpath in xpaths)
         {
@@ -215,7 +220,7 @@ internal class Program
 
         // Append the <link> node to the document's head
         headNode = htmlDoc.DocumentNode.SelectSingleNode("//head");
-        
+
         headNode.AppendChild(linkNode);
 
         // Save the modified HTML document

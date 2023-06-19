@@ -5,7 +5,9 @@ VisualStudioVersion = 17.5.33530.505
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "website_grabber", "website_grabber\website_grabber.csproj", "{8C4965FD-C097-4CB9-9AAF-7B3E4534FD62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "volvo_grabber", "volvo_grabber\volvo_grabber.csproj", "{913BB6A1-1E66-414B-854B-D4AA6E3753E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "volvo_grabber", "volvo_grabber\volvo_grabber.csproj", "{913BB6A1-1E66-414B-854B-D4AA6E3753E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mercedes_grabber", "mercedes_grabber\mercedes_grabber.csproj", "{B6149E69-6151-4B0D-837D-439B775FFCDC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{913BB6A1-1E66-414B-854B-D4AA6E3753E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{913BB6A1-1E66-414B-854B-D4AA6E3753E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{913BB6A1-1E66-414B-854B-D4AA6E3753E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6149E69-6151-4B0D-837D-439B775FFCDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6149E69-6151-4B0D-837D-439B775FFCDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6149E69-6151-4B0D-837D-439B775FFCDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6149E69-6151-4B0D-837D-439B775FFCDC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
