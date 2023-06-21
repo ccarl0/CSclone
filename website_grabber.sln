@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mercedes_grabber", "mercede
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "photo_grabber", "photo_grabber\photo_grabber.csproj", "{D06395AD-D933-4B48-9752-C6E859F3746B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "headless_photo_grabber", "headless_photo_grabber\headless_photo_grabber.csproj", "{861FACD6-B6C4-429B-8358-C1EC50E91DBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "headless_photo_grabber", "headless_photo_grabber\headless_photo_grabber.csproj", "{861FACD6-B6C4-429B-8358-C1EC50E91DBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mercedes_shadowroot_photograbber", "mercedes_shadowroot_photograbber\mercedes_shadowroot_photograbber.csproj", "{CA651699-B8E3-4308-AB95-E3A1FA8B88A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{861FACD6-B6C4-429B-8358-C1EC50E91DBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{861FACD6-B6C4-429B-8358-C1EC50E91DBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{861FACD6-B6C4-429B-8358-C1EC50E91DBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA651699-B8E3-4308-AB95-E3A1FA8B88A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA651699-B8E3-4308-AB95-E3A1FA8B88A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA651699-B8E3-4308-AB95-E3A1FA8B88A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA651699-B8E3-4308-AB95-E3A1FA8B88A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
