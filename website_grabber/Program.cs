@@ -39,19 +39,19 @@ class Program
 
         List<Task> tasks = new List<Task>();
 
-        Parallel.ForEach(modelsURIList, async url => 
+        foreach (var url in modelsURIList)
         {
             Task task = Task.Run(async () =>
             {
                 await RunMainLoopAsync(url);
             });
             tasks.Add(task);
-        });
+        }
 
         await Task.WhenAll(tasks);
         stopwatch.Stop();
 
-        Console.WriteLine("Downloaded all websites");
+        Console.WriteLine("Downloaded all models");
         Console.WriteLine($"Total execution time: {stopwatch.Elapsed}");
     }
 
@@ -75,15 +75,15 @@ class Program
         // get images
         //await GetAllImages(url, name);
 
-        var urlsList = await GetAllImagesURLs(name);
-        await GetAllImagesNames(name);
-        int counter = 0;
-        foreach (var item in urlsList)
-        {
-            //await Console.Out.WriteLineAsync($"Downlaoding {item}");
-            await DownloadImage(item, name, counter);
-            counter++;
-        }
+        //var urlsList = await GetAllImagesURLs(name);
+        //await GetAllImagesNames(name);
+        //int counter = 0;
+        //foreach (var item in urlsList)
+        //{
+        //    //await Console.Out.WriteLineAsync($"Downlaoding {item}");
+        //    await DownloadImage(item, name, counter);
+        //    counter++;
+        //}
 
         //clean html
         // remove: header, footer, configuration button, nav bar
@@ -130,153 +130,113 @@ class Program
         htmlDocument.Save(htmlFilePath);
     }
 
-    static async Task<string> DownloadJavaScriptAndRemoveTagAsync(string pageUrl)
-    {
-        string scriptId = "spaModel";
+    //static async Task<List<string>> GetAllImagesURLs(string name)
+    //{
+    //    List<string> imagesUrlsList = new List<string>();
 
-        HttpClient httpClient = new HttpClient();
+    //    string htmlFilePath = $"../../../res/{name}/{name}.html";
 
-        // Download the HTML content of the page
-        string htmlContent = await httpClient.GetStringAsync(pageUrl);
+    //    HtmlDocument document = new HtmlDocument();
+    //    document.Load(htmlFilePath);
 
-        HtmlDocument doc = new HtmlDocument();
-        doc.LoadHtml(htmlContent);
+    //    // For every tag in the HTML containing the node img.
+    //    foreach (var link in document.DocumentNode.Descendants("img")
+    //        .Select(i => i.Attributes["src"]))
+    //    {
+    //        var linkString = link.Value.ToString();
+    //        if (linkString.StartsWith("data:image"))
+    //        {
+    //            //skipping 64-encoded images
+    //            continue;
+    //        }
+    //        else if (linkString.StartsWith("/idhub"))
+    //        {
+    //            var imagePath = linkString;
+    //            linkString = $"https://www.volkswagen.it{imagePath}";
+    //            imagesUrlsList.Add(linkString);
+    //        }
+    //        else if(linkString.StartsWith("https:"))
+    //        {
+    //            //await Console.Out.WriteLineAsync(linkString);
+    //            imagesUrlsList.Add(linkString);
+    //        }
+    //    }
+    //    string filePath = $"../../../res/{name}/images_urls.txt";
+    //    File.WriteAllLines(filePath, imagesUrlsList);
 
-        // Find the <script> tag with the specified id
-        HtmlNode scriptTag = doc.GetElementbyId(scriptId);
+    //    return imagesUrlsList;
+    //}
 
-        if (scriptTag != null)
-        {
-            // Extract the JavaScript content from the script tag
-            string javascriptContent = scriptTag.InnerHtml;
+    //static async Task<List<string>> GetAllImagesNames(string name)
+    //{
+    //    string filePath = $"../../../res/{name}/{name}.html";
+    //    List<string> namesList = new List<string>();
 
-            // Save the JavaScript content to a file
-            string javascriptFilePath = $"../../../res/volkswagen/script.js";
-            File.AppendAllText(javascriptFilePath, javascriptContent);
+    //    HtmlDocument document = new HtmlDocument();
+    //    document.Load(filePath);
 
-            return javascriptContent;
-        }
+    //    // For every tag in the HTML containing the node img.
+    //    foreach (var alt in document.DocumentNode.Descendants("img")
+    //        .Where(i => !i.Ancestors("noscript").Any())
+    //        .Select(i => i.Attributes["alt"]))
+    //    {
+    //        var altString = alt?.Value?.ToString();
 
-        return string.Empty;
-    }
+    //        if (altString != null)
+    //        {
+    //            string legalString = ReplaceIllegalChar(altString);
+    //            namesList.Add(legalString);
+    //        }
+    //    }
 
+    //    string outputFilePath = $"../../../res/{name}/names.txt";
+    //    File.WriteAllLines(outputFilePath, namesList);
 
-
-
-
-
-
-
-
-
-    //get images URLs and save in a txt file
-    static async Task<List<string>> GetAllImagesURLs(string name)
-    {
-        List<string> imagesUrlsList = new List<string>();
-
-        string htmlFilePath = $"../../../res/{name}/{name}.html";
-
-        HtmlDocument document = new HtmlDocument();
-        document.Load(htmlFilePath);
-
-        // For every tag in the HTML containing the node img.
-        foreach (var link in document.DocumentNode.Descendants("img")
-            .Select(i => i.Attributes["src"]))
-        {
-            var linkString = link.Value.ToString();
-            if (linkString.StartsWith("data:image"))
-            {
-                //skipping 64-encoded images
-                continue;
-            }
-            else if (linkString.StartsWith("/idhub"))
-            {
-                var imagePath = linkString;
-                linkString = $"https://www.volkswagen.it{imagePath}";
-                imagesUrlsList.Add(linkString);
-            }
-            else if(linkString.StartsWith("https:"))
-            {
-                //await Console.Out.WriteLineAsync(linkString);
-                imagesUrlsList.Add(linkString);
-            }
-        }
-        string filePath = $"../../../res/{name}/images_urls.txt";
-        File.WriteAllLines(filePath, imagesUrlsList);
-
-        return imagesUrlsList;
-    }
-
-    static async Task<List<string>> GetAllImagesNames(string name)
-    {
-        string filePath = $"../../../res/{name}/{name}.html";
-        List<string> namesList = new List<string>();
-
-        HtmlDocument document = new HtmlDocument();
-        document.Load(filePath);
-
-        // For every tag in the HTML containing the node img.
-        foreach (var alt in document.DocumentNode.Descendants("img")
-            .Where(i => !i.Ancestors("noscript").Any())
-            .Select(i => i.Attributes["alt"]))
-        {
-            var altString = alt?.Value?.ToString();
-
-            if (altString != null)
-            {
-                string legalString = ReplaceIllegalChar(altString);
-                namesList.Add(legalString);
-            }
-        }
-
-        string outputFilePath = $"../../../res/{name}/names.txt";
-        File.WriteAllLines(outputFilePath, namesList);
-
-        return namesList;
-    }
+    //    return namesList;
+    //}
 
 
 
-    static async Task DownloadImage(string imageUrl, string name,int counter)
-    {
-        string directoryPath = $"../../../res/{name}/img/";
-        string nameFilePath = $"../../../res/{name}/names.txt";
+    //static async Task DownloadImage(string imageUrl, string name,int counter)
+    //{
+    //    string directoryPath = $"../../../res/{name}/img/";
+    //    string nameFilePath = $"../../../res/{name}/names.txt";
 
-        string[] lines = File.ReadAllLines(nameFilePath);
-        List<string> namesList = new List<string>(lines);
+    //    string[] lines = File.ReadAllLines(nameFilePath);
+    //    List<string> namesList = new List<string>(lines);
 
-        if (!Directory.Exists(directoryPath))
-        {
-            Directory.CreateDirectory(directoryPath);
-            //Console.WriteLine("Directory created: " + directoryPath);
-        }
+    //    if (!Directory.Exists(directoryPath))
+    //    {
+    //        Directory.CreateDirectory(directoryPath);
+    //        //Console.WriteLine("Directory created: " + directoryPath);
+    //    }
 
-        using (HttpClient client = new HttpClient())
-        {
-            try
-            {
-                using (HttpResponseMessage response = await client.GetAsync(imageUrl))
-                {
-                    if (response.IsSuccessStatusCode)
-                    {
-                        using (Stream stream = await response.Content.ReadAsStreamAsync())
-                        using (FileStream fileStream = new FileStream($"../../../res/{name}/img/{namesList[counter]}.png", FileMode.Create))
-                        {
-                            await stream.CopyToAsync(fileStream);
-                        }
-                    }
-                    else
-                    {
-                        //Console.WriteLine($"Failed to download image. Status code: {response.StatusCode}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                //Console.WriteLine($"An error occurred while downloading the image: {ex.Message}");
-            }
-        }
-    }
+    //    using (HttpClient client = new HttpClient())
+    //    {
+    //        try
+    //        {
+    //            using (HttpResponseMessage response = await client.GetAsync(imageUrl))
+    //            {
+    //                if (response.IsSuccessStatusCode)
+    //                {
+    //                    using (Stream stream = await response.Content.ReadAsStreamAsync())
+    //                    using (FileStream fileStream = new FileStream($"../../../res/{name}/img/{namesList[counter]}.png", FileMode.Create))
+    //                    {
+    //                        await stream.CopyToAsync(fileStream);
+    //                    }
+    //                }
+    //                else
+    //                {
+    //                    //Console.WriteLine($"Failed to download image. Status code: {response.StatusCode}");
+    //                }
+    //            }
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            //Console.WriteLine($"An error occurred while downloading the image: {ex.Message}");
+    //        }
+    //    }
+    //}
 
     static void RewriteHtmlImgTags(string name)
     {
@@ -399,8 +359,6 @@ class Program
         response.EnsureSuccessStatusCode();
         //Console.WriteLine(await response.Content.ReadAsStringAsync());
         return await response.Content.ReadAsStringAsync();
-
-        
     }
 
     static async Task<string> DownloadCssAsync(string htmlContent, string baseUrl)
@@ -423,20 +381,23 @@ class Program
     {
 
         var htmlContent = await DownloadContentAsync(url);
-        var cssContent = await DownloadCssAsync(htmlContent, url);
+        //var cssContent = await DownloadCssAsync(htmlContent, url);
         var jsContent = await DownloadJavaScriptAsync(htmlContent, url);
 
         //await Console.Out.WriteLineAsync("Done!");
 
 
         string htmlFilePath = $"../../../res/{name}/{name}.html";
-        string cssFilePath = $"../../../res/{name}/styles.css";
+        //string cssFilePath = $"../../../res/{name}/styles.css";
         string jsFilePath = $"../../../res/{name}/script.js";
 
         Directory.CreateDirectory($"../../../res/{name}");
 
         File.WriteAllText(htmlFilePath, htmlContent);
-        File.WriteAllText(cssFilePath, cssContent);
+        //File.WriteAllText(cssFilePath, cssContent);
+        //Console.WriteLine(cssContent);
+        //Console.WriteLine("THIS CSSSSSSSSSSSSSSSSSSSSS");
+        //Console.ReadLine();
         File.WriteAllText(jsFilePath, jsContent);
     }
 
@@ -447,7 +408,7 @@ class Program
         RemoveFooter(name);
         RemoveConfiguratorButton(name);
         RemoveNav(name);
-        RewriteHtmlImgTags(name);
+        //RewriteHtmlImgTags(name);
 
         
 
