@@ -27,7 +27,7 @@ internal class Program
         Thread.Sleep(5000);
 
         IWebElement shadowHost = driver.FindElement(By.Id("first-web-component"));
-        Console.WriteLine(shadowHost.GetAttribute("class"));
+        //Console.WriteLine(shadowHost.GetAttribute("class"));
 
         var element = shadowHost.GetShadowRoot()
             .FindElement(By.CssSelector("section.wb-grid-col-mq1-12.wb-grid-col-offset-mq1-0.wb-grid-col-mq5-9.wb-grid-col-offset-mq5-0"));
