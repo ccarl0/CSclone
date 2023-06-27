@@ -63,6 +63,7 @@ internal class Program
 
                 //save htmlContent
                 Directory.CreateDirectory(htmlDirPath);
+                Directory.CreateDirectory($"{htmlDirPath}/img"); // imgs directory
                 await File.WriteAllTextAsync(htmlFilePath, htmlContent);
 
                 //// grab css
@@ -120,8 +121,11 @@ internal class Program
                 // rewrite all href
                 doc = RemoveHref(doc);
 
-                doc.Save(htmlFilePath);
 
+
+                doc = await SaveImageAsync(doc, name);
+
+                doc.Save(htmlFilePath);
             });
 
             tasks.Add(task);
@@ -133,6 +137,72 @@ internal class Program
 
         stopwatch.Stop();
         Console.WriteLine($"\n\n\nTotal execution time: {stopwatch.Elapsed}");
+    }
+
+    private static async Task<HtmlDocument> SaveImageAsync(HtmlDocument doc, string name)
+    {
+        HtmlNodeCollection imgNodes = doc.DocumentNode.SelectNodes("//source[@srcset and @media='(min-aspect-ratio: 4/3)'] | //source[@srcset and @media='(min-width: 560px)'] | //img[@src]");
+
+        if (imgNodes != null)
+        {
+            var counter = 0;
+            foreach (HtmlNode imgNode in imgNodes)
+            {
+                string imageUrl = imgNode.GetAttributeValue("srcset", "");
+                if (!string.IsNullOrWhiteSpace(imageUrl))
+                {
+                    imageUrl = imageUrl.Trim().Split("2400w,")[1].Split("2880w")[0];
+
+                    var imgClient = new HttpClient();
+                    var imgRequest = new HttpRequestMessage(HttpMethod.Get, imageUrl);
+                    await Console.Out.WriteLineAsync(imageUrl);
+                    Thread.Sleep(200);
+                    try
+                    {
+                        var imgResponse = await imgClient.SendAsync(imgRequest);
+                        imgResponse.EnsureSuccessStatusCode();
+
+                        using (Stream stream = await imgResponse.Content.ReadAsStreamAsync())
+                        using (FileStream fileStream = new FileStream($"../../../res/{name}/img/{counter++}.png", FileMode.Create))
+                        {
+                            await stream.CopyToAsync(fileStream);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Console.WriteLine(e.Message);
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Console.WriteLine();
+
+                    }
+                    
+
+                    //imgNode.SetAttributeValue("srcset", $"img/{counter}.png");
+                }
+
+                // naming system
+                //string imageName = imgNode.GetAttributeValue("alt", "");
+                //if (!string.IsNullOrWhiteSpace(imageName))
+                //{
+                //    name = $"{imageName}.png";
+                //    string imageNamesFilePath = $"../../../{name}";
+                //}
+                //else
+                //{
+                //    imageName = "None";
+                //    numberedName++;
+                //    string imageNamesFilePath = $"../../../{numberedName}";
+                //}
+            }
+        }
+
+        return doc;
     }
 
     private static HtmlDocument RemoveHref(HtmlDocument doc)
@@ -245,33 +315,37 @@ internal class Program
         doc.Load(htmlFilePath);
 
         HtmlNodeCollection scriptNodes = doc.DocumentNode.SelectNodes("//script[@src]");
-
-        foreach (HtmlNode scriptNode in scriptNodes)
+        if (scriptNodes != null)
         {
-            string src = scriptNode.GetAttributeValue("src", "");
-            scriptUrlList.Add(src);
-            scriptNode.Remove();
+            foreach (HtmlNode scriptNode in scriptNodes)
+            {
+                string src = scriptNode.GetAttributeValue("src", "");
+                scriptUrlList.Add(src);
+                scriptNode.Remove();
+            }
+
+            scriptNodes = doc.DocumentNode.SelectNodes("//script[@async]");
+
+            foreach (HtmlNode scriptNode in scriptNodes)
+            {
+                string src = scriptNode.GetAttributeValue("async src", "");
+                scriptUrlList.Add(src);
+                scriptNode.Remove();
+            }
+
+
+            HtmlNode headNode = doc.DocumentNode.SelectSingleNode("//head");
+            HtmlNode sNode = doc.CreateElement("script");
+            sNode.SetAttributeValue("src", "script.js");
+            headNode.AppendChild(sNode);
+
+            HtmlNode lNode = doc.CreateElement("link");
+            lNode.SetAttributeValue("rel", "stylesheet");
+            lNode.SetAttributeValue("href", @"styles.css");
+            lNode.SetAttributeValue("type", "text/css");
+            headNode.AppendChild(lNode);
         }
-
-        scriptNodes = doc.DocumentNode.SelectNodes("//script[@async]");
-
-        foreach (HtmlNode scriptNode in scriptNodes)
-        {
-            string src = scriptNode.GetAttributeValue("async src", "");
-            scriptUrlList.Add(src);
-            scriptNode.Remove();
-        }
-
-        HtmlNode headNode = doc.DocumentNode.SelectSingleNode("//head");
-        HtmlNode sNode = doc.CreateElement("script");
-        sNode.SetAttributeValue("src", "script.js");
-        headNode.AppendChild(sNode);
-
-        HtmlNode lNode = doc.CreateElement("link");
-        lNode.SetAttributeValue("rel", "stylesheet");
-        lNode.SetAttributeValue("href", @"styles.css");
-        lNode.SetAttributeValue("type", "text/css");
-        headNode.AppendChild(lNode);
+        
 
         doc.Save(htmlFilePath);
 
@@ -336,22 +410,26 @@ internal class Program
         doc.Load(htmlFilePath);
 
         HtmlNodeCollection styleNodes = doc.DocumentNode.SelectNodes("//style");
-        try
+        if (styleNodes != null)
         {
-            Console.WriteLine(htmlFilePath);
-            foreach (HtmlNode styleNode in styleNodes)
+            try
             {
-                string innerContent = styleNode.InnerHtml;
-                stylesTagList.Add(innerContent);
+                Console.WriteLine(htmlFilePath);
+                foreach (HtmlNode styleNode in styleNodes)
+                {
+                    string innerContent = styleNode.InnerHtml;
+                    stylesTagList.Add(innerContent);
 
-                // remove tag
-                styleNode.Remove();
+                    // remove tag
+                    styleNode.Remove();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-        }
+        
 
 
         doc.Save(htmlFilePath);
