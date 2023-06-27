@@ -112,26 +112,26 @@ internal class Program
 
 
         List<string> xpaths = new List<string>
-        { "//a[@data-autoid='pdpSubmenu:cta']",
-          "//*[@id='stats']/div/div/section/div[1]/div[2]/div[4]",
-          "//*[@id='colorSelector']/div/div/section[1]/div[4]",
-          "//*[@id='colorSelector']/div/div/section[2]",
-          "//*[@id='__next']/div/div[15]/div/div/section",
-          "//*[@data-autoid='Electrification']",
-          "//*[@data-autoid='disclaimer']",
-          "//*[@id='faqs']",
-          "//*[@id='imageWithTextAndMarketingLinks']",
-          "//*[@id='levelComparison']",
-          "//*[@id='vcc-site-footer-shadow-container']",
-          "//*[@id='sitenav:topbar']",
-          //"//*[@id='colorSelector']",
-          "//*[@id='onetrust-consent-sdk']" };
+        {
+            "//div[div[a[span[contains( text(), 'Scegli')]]]]",
+            "//div[div[@id='sitenav:topbar']]",
+            "//div[div[a[span[contains( text(), 'Prenota')]]]]",
+            "//div[a[contains( text(), 'Scopri')]]",
+            "//div[div[a[span[contains( text(), 'Panoramica')]]]]",
+            "//div[div[a[span[contains( text(), 'Prenota')]]]]",
+            "//div[div[div[div[div[div[div[a[contains( text(), 'Cookie')]]]]]]]]",
+            "//div[a[contains( text(), 'Esplora')]]",
+            "//div[div[a[contains( text(), 'SCOPRI')]]]",
+            "//div[div[div[div[section[div[div[div[div[div[div[div[a[span[contains( text(), 'Richiedi')]]]]]]]]]]]]]]",
+            "//div[div[div[div[section[div[div[div[div[div[div[h2[contains( text(), 'Esplora')]]]]]]]]]]]]",
+            "//div[div[@id='faqs']]",
+            "//div[a[contains( text(), 'Scopri')]]"
+        };
 
         foreach (var xpath in xpaths)
         {
             htmlDoc = RemoveElementsByXPath(htmlDoc, xpath);
         }
-
 
         // saving doc
         htmlDoc.Save(htmlFilePath);

@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mercedes_models_images_grab
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "volkswagen_models_images_grabber", "volkswagen_models_images_grabber\volkswagen_models_images_grabber.csproj", "{FB1823DB-9629-4FCB-B6EF-22223CAA4044}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "volkswagen_models_grabber", "volkswagen_models_grabber\volkswagen_models_grabber.csproj", "{1717F169-DE72-43F8-9C5B-BEE83C10ED9A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "volkswagen_models_grabber", "volkswagen_models_grabber\volkswagen_models_grabber.csproj", "{1717F169-DE72-43F8-9C5B-BEE83C10ED9A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mercedes_models_grabber", "mercedes_models_grabber\mercedes_models_grabber.csproj", "{27C7745C-5E3A-4FC4-8049-E2377549B50B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{1717F169-DE72-43F8-9C5B-BEE83C10ED9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1717F169-DE72-43F8-9C5B-BEE83C10ED9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1717F169-DE72-43F8-9C5B-BEE83C10ED9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27C7745C-5E3A-4FC4-8049-E2377549B50B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27C7745C-5E3A-4FC4-8049-E2377549B50B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27C7745C-5E3A-4FC4-8049-E2377549B50B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27C7745C-5E3A-4FC4-8049-E2377549B50B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
