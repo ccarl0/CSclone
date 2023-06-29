@@ -13,8 +13,7 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        Console.WriteLine("Mercedes models grabber started!");
-
+        Console.WriteLine("Mercedes models grabber started!"); 
 
         string modelsPathString = "../../../assets/models.txt";
 
@@ -36,11 +35,8 @@ internal class Program
         Stopwatch stopwatch = Stopwatch.StartNew();
 
         List<Task> tasks = new List<Task>();
-
         int maxParallelTasks = 4;
-        SemaphoreSlim semaphore = new SemaphoreSlim(maxParallelTasks); // Set the maximum parallel tasks
-
-       
+        SemaphoreSlim semaphore = new SemaphoreSlim(maxParallelTasks); 
         
         foreach (var url in modelsURIList)
         {
@@ -77,23 +73,64 @@ internal class Program
 
                 int counter = 0;
                 List<string> driverShadowRootHtmlContents = new();
+                List<HtmlDocument> documentModifiedHtmlShadowElements = new();
 
+                List<string> xPathShadowsList = new()
+                {
+                    "//body[contains(.//text(), 'Richiedi')]",
+                    "//body[contains(.//text(), 'Interessato a')]",
+                    "//body[.//span[contains( text(), 'Configura')]]",
+                    "//body[.//a[@href='#highlight']]",
+                    "//body[.//p[contains( text(), 'Registra')]]",
+                    "//body[.//p[contains( text(), 'Berline')]]",
+                    "//div[div[div[a[contains( text(), 'preventivo')]]]]",
+                     //tiles button
+                    "//header[div[span[contains( text(), 'Vai al')]]]",
+                    "//header[div[span[contains( text(), 'Confronta')]]]",
+                    "//header[div[span[contains( text(), 'Scarica')]]]",
+                    "//header[div[span[contains( text(), 'Calcola')]]]",
+                    "//ul[.//*[@href]]", // buttons like "Go to ECO Coach app"
+                    "//body[.//*[contains( text(), 'Scopri')]]",
+                    "//ul[.//*[contains( text(), 'Ricarica')]]",
+                    "//body[.//button[@id='button-focused']]"
+                };
+
+                // for each host, run script to extract shadow as html content <string>, add to list (dunno why) save a node as html file.
                 foreach (var shadowHost in driverShadowHosts)
                 {
                     string driverSadowRootHtmlContent = (string)driver.ExecuteScript(script, shadowHost);
-                    driverShadowRootHtmlContents.Add(driverSadowRootHtmlContent);
-                    File.WriteAllText($"{htmlFilePath}+{counter++}.html", driverSadowRootHtmlContent);
+                    //Thread.Sleep(500);
+                    HtmlDocument shadowDocument = new();
+                    if (driverSadowRootHtmlContent != null)
+                    {
+
+                        await Console.Out.WriteLineAsync("a");
+                        shadowDocument.LoadHtml(driverSadowRootHtmlContent);
+
+                        foreach (var xPath in xPathShadowsList)
+                        {
+                            var nodesToRemove = shadowDocument.DocumentNode.SelectNodes(xPath);
+                            if (nodesToRemove != null)
+                            {
+                                foreach (var node in nodesToRemove)
+                                {
+                                    if (node != null)
+                                    {
+                                        node.Remove();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    documentModifiedHtmlShadowElements.Add(shadowDocument);
                 }
 
-                int driverShadowHostIndex = 0;
-                foreach (var documentShadowHost in documentShadowHosts)
-                {
-                    HtmlNode documentShadowNode= ConvertWebElement2HtmlNode(driverShadowHosts[driverShadowHostIndex]);
-                    documentShadowHost.AppendChild(documentShadowNode);
-                }
+                int ShadowHostIndex = 0;
 
+                foreach (var documentShadowHost in documentShadowHosts) documentShadowHost.AppendChild(documentModifiedHtmlShadowElements[ShadowHostIndex++].DocumentNode);
 
-                doc = CleanHtml(doc);
+                doc = CleanHtml(doc); // not inside the shadow asses
 
 
                 doc.Save(htmlFilePath);
@@ -113,6 +150,31 @@ internal class Program
         Console.WriteLine($"\n\n\nTotal execution time: {stopwatch.Elapsed}");
     }
 
+    private static HtmlDocument ManipulateShadowDoc(HtmlDocument shadowDoc)
+    {
+        List<string> xPathList = new List<string>()
+        {
+            
+        };
+
+        foreach (var xPath in xPathList)
+        {
+            var nodes = shadowDoc.DocumentNode.SelectNodes(xPath);
+            if (nodes != null)
+            {
+                foreach (var node in nodes)
+                {
+                    if (node != null)
+                    {
+                        node.Remove();
+                    }
+                }
+            }
+        }
+        
+        return shadowDoc;
+    }
+
     private static HtmlDocument CleanHtml(HtmlDocument doc)
     {
         List<string> xPathList = new List<string>()
@@ -128,7 +190,8 @@ internal class Program
             "//fss-search-input",
             "//button[@aria-label='Menu']",
             "//button[@aria-label='menu']",
-            "//iam-user-menu"
+            "//iam-user-menu",
+            "//fss-search-input"
         };
 
         doc = RemoveXPaths(doc, xPathList);
@@ -164,40 +227,16 @@ internal class Program
     {
         string htmlContent = webElement.GetAttribute("innerHTML");
 
-        Console.WriteLine(htmlContent);
-
-
         HtmlDocument htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(htmlContent);
 
         HtmlNode htmlNode = htmlDoc.DocumentNode;
 
-        //if (htmlNode != null)
-        //{
-        //    htmlNode = ManipualteNode(htmlNode);
-        //}
+        
 
         return htmlNode;
     }
 
-    private static HtmlNode ManipualteNode(HtmlNode htmlNode)
-    {
-        Console.WriteLine("Manipulate");
-        var nodes = htmlNode.SelectNodes("//p[contains( text(), 'Modelli')");
-
-        Console.WriteLine(nodes.Count());
-        foreach (var node in nodes)
-        {
-            if (node != null)
-            {
-                node.Remove();
-                Console.WriteLine("aa");
-            }
-        }
-
-        return htmlNode;    
-
-    }
 
     private static async Task<string> GetHtmlWithoutShadowAsync(string url)
     {
