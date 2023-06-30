@@ -1,19 +1,15 @@
-﻿using OpenQA.Selenium.Chrome;
+﻿using HtmlAgilityPack;
 using OpenQA.Selenium;
-using WebDriverManager.DriverConfigs.Impl;
-using WebDriverManager;
-using AngleSharp.Attributes;
-using HtmlAgilityPack;
-using OpenQA.Selenium.Support.UI;
-using System.Net;
+using OpenQA.Selenium.Chrome;
 using System.Diagnostics;
-using System.Net.Http;
+using WebDriverManager;
+using WebDriverManager.DriverConfigs.Impl;
 
 internal class Program
 {
     private static async Task Main(string[] args)
     {
-        Console.WriteLine("Mercedes models grabber started!"); 
+        Console.WriteLine("Mercedes models grabber started!");
 
         string modelsPathString = "../../../assets/models.txt";
 
@@ -35,20 +31,11 @@ internal class Program
         Stopwatch stopwatch = Stopwatch.StartNew();
 
         List<Task> tasks = new List<Task>();
-        int maxParallelTasks = 4;
-        SemaphoreSlim semaphore = new SemaphoreSlim(maxParallelTasks); 
-        
-        foreach (var url in modelsURIList)
-        {
-            Task task = Task.Run(async () =>
-            {
-                await semaphore.WaitAsync();
-                new DriverManager().SetUpDriver(new ChromeConfig());
-                ChromeDriver driver = new ChromeDriver();
+        int maxParallelTasks = 3;
+        SemaphoreSlim semaphore = new SemaphoreSlim(maxParallelTasks);
 
-                driver.Navigate().GoToUrl(url);
-
-                string script = @"
+        // js script to be inject ot extract inner
+        string script = @"
                                 var shadowRoot = arguments[0].shadowRoot;
                                 if (shadowRoot) {
                                     return shadowRoot.innerHTML;
@@ -57,7 +44,43 @@ internal class Program
                                 }
                 ";
 
-                // finding shadowHost
+
+        new DriverManager().SetUpDriver(new ChromeConfig());
+
+
+
+        foreach (var url in modelsURIList)
+        {
+            Task task = Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+
+                ChromeDriver driver = new ChromeDriver();
+
+                driver.Navigate().GoToUrl(url);
+
+                var driverShadowHosts = driver.FindElements(By.XPath("//*[@component-id]"));
+
+
+                List<HtmlDocument> htmlShadowDocumentList = new();
+
+                foreach (var driverShadowHost in driverShadowHosts)
+                {
+                    string driverShadowRootHtmlContent = (string)driver.ExecuteScript(script, driverShadowHost);
+
+                    if (driverShadowRootHtmlContent != null)
+                    {
+                        HtmlDocument htmlShadowDocument = new();
+                        
+                        htmlShadowDocument.LoadHtml(driverShadowRootHtmlContent);
+
+                        htmlShadowDocumentList.Add(htmlShadowDocument);
+                    }
+                }
+                driver.Close();
+
+                semaphore.Release();
+
 
 
                 // download html file no shadow elements
@@ -67,81 +90,41 @@ internal class Program
                 HtmlDocument doc = new();
                 doc.Load(htmlFilePath);
 
-                var driverShadowHosts = driver.FindElements(By.XPath("//*[@component-id]"));
 
                 var documentShadowHosts = doc.DocumentNode.SelectNodes("//*[@component-id]");
 
-                int counter = 0;
-                List<string> driverShadowRootHtmlContents = new();
-                List<HtmlDocument> documentModifiedHtmlShadowElements = new();
+                // for each host in driverShadowHost add htmlShadow
 
-                List<string> xPathShadowsList = new()
+                if (htmlShadowDocumentList.Count > documentShadowHosts.Count)
                 {
-                    "//body[contains(.//text(), 'Richiedi')]",
-                    "//body[contains(.//text(), 'Interessato a')]",
-                    "//body[.//span[contains( text(), 'Configura')]]",
-                    "//body[.//a[@href='#highlight']]",
-                    "//body[.//p[contains( text(), 'Registra')]]",
-                    "//body[.//p[contains( text(), 'Berline')]]",
-                    "//div[div[div[a[contains( text(), 'preventivo')]]]]",
-                     //tiles button
-                    "//header[div[span[contains( text(), 'Vai al')]]]",
-                    "//header[div[span[contains( text(), 'Confronta')]]]",
-                    "//header[div[span[contains( text(), 'Scarica')]]]",
-                    "//header[div[span[contains( text(), 'Calcola')]]]",
-                    "//ul[.//*[@href]]", // buttons like "Go to ECO Coach app"
-                    "//body[.//*[contains( text(), 'Scopri')]]",
-                    "//ul[.//*[contains( text(), 'Ricarica')]]",
-                    "//body[.//button[@id='button-focused']]"
-                };
-
-                // for each host, run script to extract shadow as html content <string>, add to list (dunno why) save a node as html file.
-                foreach (var shadowHost in driverShadowHosts)
-                {
-                    string driverSadowRootHtmlContent = (string)driver.ExecuteScript(script, shadowHost);
-                    //Thread.Sleep(500);
-                    HtmlDocument shadowDocument = new();
-                    if (driverSadowRootHtmlContent != null)
+                    Console.WriteLine("documentShadowHosts");
+                    for (int i = 0; i < documentShadowHosts.Count; i++)
                     {
-
-                        await Console.Out.WriteLineAsync("a");
-                        shadowDocument.LoadHtml(driverSadowRootHtmlContent);
-
-                        foreach (var xPath in xPathShadowsList)
-                        {
-                            var nodesToRemove = shadowDocument.DocumentNode.SelectNodes(xPath);
-                            if (nodesToRemove != null)
-                            {
-                                foreach (var node in nodesToRemove)
-                                {
-                                    if (node != null)
-                                    {
-                                        node.Remove();
-                                    }
-                                }
-                            }
-                        }
+                        var child = htmlShadowDocumentList[i].DocumentNode;
+                        documentShadowHosts[i].PrependChild(child);
+                        doc.Save(htmlFilePath);
                     }
-
-                    documentModifiedHtmlShadowElements.Add(shadowDocument);
                 }
+                else
+                {
+                    Console.WriteLine("htmlShadowDocumentList");
 
-                int ShadowHostIndex = 0;
-
-                foreach (var documentShadowHost in documentShadowHosts) documentShadowHost.AppendChild(documentModifiedHtmlShadowElements[ShadowHostIndex++].DocumentNode);
-
-                doc = CleanHtml(doc); // not inside the shadow asses
-
-
-                doc.Save(htmlFilePath);
-
-                driver.Close();
-
-                semaphore.Release();
+                    if (htmlShadowDocumentList.Count == documentShadowHosts.Count)
+                    {
+                        Console.WriteLine("Uguale");
+                    }
+                    for (int i = 0; i < htmlShadowDocumentList.Count; i++)
+                    {
+                        var child = htmlShadowDocumentList[i].DocumentNode;
+                        documentShadowHosts[i].PrependChild(child);
+                        doc.Save(htmlFilePath);
+                    }
+                }
             });
 
             tasks.Add(task);
         }
+
         await Task.WhenAll(tasks);
 
         stopwatch.Stop();
@@ -149,94 +132,6 @@ internal class Program
         await Console.Out.WriteLineAsync("Finished");
         Console.WriteLine($"\n\n\nTotal execution time: {stopwatch.Elapsed}");
     }
-
-    private static HtmlDocument ManipulateShadowDoc(HtmlDocument shadowDoc)
-    {
-        List<string> xPathList = new List<string>()
-        {
-            
-        };
-
-        foreach (var xPath in xPathList)
-        {
-            var nodes = shadowDoc.DocumentNode.SelectNodes(xPath);
-            if (nodes != null)
-            {
-                foreach (var node in nodes)
-                {
-                    if (node != null)
-                    {
-                        node.Remove();
-                    }
-                }
-            }
-        }
-        
-        return shadowDoc;
-    }
-
-    private static HtmlDocument CleanHtml(HtmlDocument doc)
-    {
-        List<string> xPathList = new List<string>()
-        {
-            "//owc-vertical-navigation",
-            "//div[div[iframe]]\r\n",
-            "//owc-footer",
-            "//owc-stage[@data-anchor-id='contact']",
-            "//owc-next-best-activities",
-            "//owc-banner-teaser",
-            "//owc-subnavigation",
-            "//eqpodc-flyout-button",
-            "//fss-search-input",
-            "//button[@aria-label='Menu']",
-            "//button[@aria-label='menu']",
-            "//iam-user-menu",
-            "//fss-search-input"
-        };
-
-        doc = RemoveXPaths(doc, xPathList);
-
-        return doc;
-    }
-
-    private static HtmlDocument RemoveXPaths(HtmlDocument doc, List<string> xPathList)
-    {
-        if (xPathList != null)
-        {
-            foreach (var xPath in xPathList)
-            {
-                var nodes = doc.DocumentNode.SelectNodes(xPath);
-
-                if (nodes != null)
-                {
-                    foreach (var node in nodes)
-                    {
-                        if (node != null)
-                        {
-                            node.Remove();
-                        }
-                    }
-                }
-            }
-        }
-
-        return doc;
-    }
-
-    private static HtmlNode ConvertWebElement2HtmlNode(IWebElement webElement)
-    {
-        string htmlContent = webElement.GetAttribute("innerHTML");
-
-        HtmlDocument htmlDoc = new HtmlDocument();
-        htmlDoc.LoadHtml(htmlContent);
-
-        HtmlNode htmlNode = htmlDoc.DocumentNode;
-
-        
-
-        return htmlNode;
-    }
-
 
     private static async Task<string> GetHtmlWithoutShadowAsync(string url)
     {
@@ -257,13 +152,5 @@ internal class Program
     private static string GetNameFromUrl(string imgUrl)
     {
         return imgUrl.Split("models/")[1].Replace("/", "-").Split(".html")[0];
-    }
-
-    private static void DownloadImage(string imageUrl, int i)
-    {
-        using (WebClient webClient = new WebClient())
-        {
-            webClient.DownloadFile(imageUrl, $"../../../res/{i.ToString()}.png");
-        }
     }
 }
