@@ -94,7 +94,6 @@ internal class Program
                 var documentShadowHosts = doc.DocumentNode.SelectNodes("//*[@component-id]");
 
                 // for each host in driverShadowHost add htmlShadow
-
                 if (htmlShadowDocumentList.Count > documentShadowHosts.Count)
                 {
                     Console.WriteLine("documentShadowHosts");
@@ -125,6 +124,7 @@ internal class Program
 
                         // manipualte children
                         child = ManipulateChild(child);
+
                         File.WriteAllText(htmlFilePath + i.ToString() + "M.html", child.InnerHtml);
                         
                         documentShadowHosts[i].PrependChild(child);
@@ -155,27 +155,34 @@ internal class Program
 
     private static HtmlNode ManipulateChild(HtmlNode child)
     {
+        Console.WriteLine(DateTime.Now);
         List<string> xPathToRemoveList = new()
         {
-            //"//body[contains(.//text(), 'Richiedi')]",
-            //"//body[contains(.//text(), 'Interessato a')]",
-            //"//body[.//span[contains( text(), 'Configura')]]",
-            //"//body[.//a[@href='#highlight']]",
-            //"//body[.//p[contains( text(), 'Registra')]]",
-            //"//body[.//p[contains( text(), 'Berline')]]",
-            //"//div[div[div[a[contains( text(), 'preventivo')]]]]",
+            "//div[.//p[contains( text(), 'Interessato')]]",
+            "//body[.//*[contains( text(), 'Electric Intelligence')]]",
+            "//body[contains(.//text(), 'Richiedi')]",
+            "//body[contains(.//text(), 'Interessato a')]",
+            "//body[.//span[contains( text(), 'Configura')]]",
+            "//body[.//a[@href='#highlight']]",
+            //"//body[div[@id='app-vue']",
+            "//body[div[div[input[@id='input-search']]]]",
+            "//body[.//p[contains( text(), 'Berline')]]",
+            "//div[div[div[a[contains( text(), 'preventivo')]]]]",
                 //tiles button
-            //"//header[div[span[contains( text(), 'Vai al')]]]",
-            //"//header[div[span[contains( text(), 'Confronta')]]]",
-            //"//header[div[span[contains( text(), 'Scarica')]]]",
-            //"//header[div[span[contains( text(), 'Calcola')]]]",
-            //"//ul[.//*[@href]]" // buttons like "Go to ECO Coach app"
-            //"//body[.//*[contains( text(), 'Scopri')]]",
-            //"//ul[.//*[contains( text(), 'Ricarica')]]",
-            //"//body[.//button[@id='button-focused']]"
+            "//header[div[span[contains( text(), 'Vai al')]]]",
+            "//header[div[span[contains( text(), 'Confronta')]]]",
+            "//header[div[span[contains( text(), 'Scarica')]]]",
+            "//header[div[span[contains( text(), 'Calcola')]]]",
+            "//ul[.//*[@href]]", // buttons like "Go to ECO Coach app"
+            "//body[.//*[contains( text(), 'Scopri')]]",
+            "//ul[.//*[contains( text(), 'Ricarica')]]",
+            "//body[.//button[@id='button-focused']]"
         };
 
-        foreach (var xPath in xPathToRemoveList) child = RemoveXpath(child, xPath);
+        foreach (var xPath in xPathToRemoveList)
+        {
+            child = RemoveXpath(child, xPath);
+        }
 
         return child;
     }
@@ -184,16 +191,15 @@ internal class Program
     {
         List<string> xPathToRemoveList = new()
         {
-            //"//owc-banner-teaser",
-            //"//owc-next-best-activities",
-            //"//owc-footer",
-            //"//owc-subnavigation",
-
-            //"//fss-search-input",
-            //"//button[@aria-label='Menu']",
-            //"//button[@aria-label='menu']",
-            //"//iam-user-menu",
-            //"//fss-search-input"
+            "//owc-banner-teaser",
+            "//owc-next-best-activities",
+            "//owc-footer",
+            "//owc-subnavigation",
+            "//fss-search-input",
+            "//button[@aria-label='Menu']",
+            "//button[@aria-label='menu']",
+            "//iam-user-menu",
+            "//fss-search-input"
         };
 
         foreach (var xPath in xPathToRemoveList) modifiedDocument = RemoveXpath(modifiedDocument, xPath);
@@ -205,8 +211,19 @@ internal class Program
     {
         if (xPath != null)
         {
+            Console.WriteLine(xPath);
             var nodes = modifiedDocument.DocumentNode.SelectNodes(xPath);
-            if (nodes != null) foreach (var node in nodes) if (node != null) node.Remove();
+            if (nodes != null) 
+                foreach (var node in nodes)
+                {
+                    if (node != null)
+                    {
+                        node.Remove();
+                        Console.WriteLine(node.InnerText);
+                        Console.WriteLine("Removed! \n\n\n\n");
+                    }
+                }
+                    
         }
 
         return modifiedDocument;
@@ -217,7 +234,17 @@ internal class Program
         if (xPath != null)
         {
             var nodes = modifiedNode.SelectNodes(xPath);
-            if (nodes != null) foreach (var node in nodes) if (node != null) node.Remove();
+            if (nodes != null)
+            {
+                foreach (var node in nodes)
+                {
+                    if (node != null)
+                    {
+                        node.Remove();
+                        Console.WriteLine(xPath + "Removed!!\n\n\n");
+                    }
+                }
+            }
         }
 
         return modifiedNode;
