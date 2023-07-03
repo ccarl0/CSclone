@@ -101,6 +101,11 @@ internal class Program
                     for (int i = 0; i < documentShadowHosts.Count; i++)
                     {
                         var child = htmlShadowDocumentList[i].DocumentNode;
+
+                        // manipualte children (I know sounds creepy)
+                        child = ManipulateChild(child);
+
+
                         documentShadowHosts[i].PrependChild(child);
                         doc.Save(htmlFilePath);
                     }
@@ -116,10 +121,25 @@ internal class Program
                     for (int i = 0; i < htmlShadowDocumentList.Count; i++)
                     {
                         var child = htmlShadowDocumentList[i].DocumentNode;
+                        File.WriteAllText(htmlFilePath + i.ToString()+".html", child.InnerHtml);
+
+                        // manipualte children
+                        child = ManipulateChild(child);
+                        File.WriteAllText(htmlFilePath + i.ToString() + "M.html", child.InnerHtml);
+                        
                         documentShadowHosts[i].PrependChild(child);
                         doc.Save(htmlFilePath);
                     }
                 }
+
+
+                // html manipulation
+                HtmlDocument modifiedDocument = new();
+                modifiedDocument.Load(htmlFilePath);
+
+                modifiedDocument = RemoveUnshadowedXpaths(modifiedDocument);
+
+                modifiedDocument.Save(htmlFilePath);
             });
 
             tasks.Add(task);
@@ -131,6 +151,76 @@ internal class Program
 
         await Console.Out.WriteLineAsync("Finished");
         Console.WriteLine($"\n\n\nTotal execution time: {stopwatch.Elapsed}");
+    }
+
+    private static HtmlNode ManipulateChild(HtmlNode child)
+    {
+        List<string> xPathToRemoveList = new()
+        {
+            //"//body[contains(.//text(), 'Richiedi')]",
+            //"//body[contains(.//text(), 'Interessato a')]",
+            //"//body[.//span[contains( text(), 'Configura')]]",
+            //"//body[.//a[@href='#highlight']]",
+            //"//body[.//p[contains( text(), 'Registra')]]",
+            //"//body[.//p[contains( text(), 'Berline')]]",
+            //"//div[div[div[a[contains( text(), 'preventivo')]]]]",
+                //tiles button
+            //"//header[div[span[contains( text(), 'Vai al')]]]",
+            //"//header[div[span[contains( text(), 'Confronta')]]]",
+            //"//header[div[span[contains( text(), 'Scarica')]]]",
+            //"//header[div[span[contains( text(), 'Calcola')]]]",
+            //"//ul[.//*[@href]]" // buttons like "Go to ECO Coach app"
+            //"//body[.//*[contains( text(), 'Scopri')]]",
+            //"//ul[.//*[contains( text(), 'Ricarica')]]",
+            //"//body[.//button[@id='button-focused']]"
+        };
+
+        foreach (var xPath in xPathToRemoveList) child = RemoveXpath(child, xPath);
+
+        return child;
+    }
+
+    private static HtmlDocument RemoveUnshadowedXpaths(HtmlDocument modifiedDocument)
+    {
+        List<string> xPathToRemoveList = new()
+        {
+            //"//owc-banner-teaser",
+            //"//owc-next-best-activities",
+            //"//owc-footer",
+            //"//owc-subnavigation",
+
+            //"//fss-search-input",
+            //"//button[@aria-label='Menu']",
+            //"//button[@aria-label='menu']",
+            //"//iam-user-menu",
+            //"//fss-search-input"
+        };
+
+        foreach (var xPath in xPathToRemoveList) modifiedDocument = RemoveXpath(modifiedDocument, xPath);
+
+        return modifiedDocument;
+    }
+
+    private static HtmlDocument RemoveXpath(HtmlDocument modifiedDocument, string xPath)
+    {
+        if (xPath != null)
+        {
+            var nodes = modifiedDocument.DocumentNode.SelectNodes(xPath);
+            if (nodes != null) foreach (var node in nodes) if (node != null) node.Remove();
+        }
+
+        return modifiedDocument;
+    }
+
+    private static HtmlNode RemoveXpath(HtmlNode modifiedNode, string xPath)
+    {
+        if (xPath != null)
+        {
+            var nodes = modifiedNode.SelectNodes(xPath);
+            if (nodes != null) foreach (var node in nodes) if (node != null) node.Remove();
+        }
+
+        return modifiedNode;
     }
 
     private static async Task<string> GetHtmlWithoutShadowAsync(string url)
