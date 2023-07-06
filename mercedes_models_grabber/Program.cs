@@ -120,12 +120,12 @@ internal class Program
                     for (int i = 0; i < htmlShadowDocumentList.Count; i++)
                     {
                         var child = htmlShadowDocumentList[i].DocumentNode;
-                        File.WriteAllText(htmlFilePath + i.ToString()+".html", child.InnerHtml);
+                        //File.WriteAllText(htmlFilePath + i.ToString()+".html", child.InnerHtml);
 
                         // manipualte children
                         child = ManipulateChild(child);
 
-                        File.WriteAllText(htmlFilePath + i.ToString() + "M.html", child.InnerHtml);
+                        //File.WriteAllText(htmlFilePath + i.ToString() + "M.html", child.InnerHtml);
                         
                         documentShadowHosts[i].PrependChild(child);
                         doc.Save(htmlFilePath);
@@ -257,7 +257,7 @@ internal class Program
         Directory.CreateDirectory($"../../../res/{GetNameFromUrl(url)}");
 
         var client = new HttpClient();
-        var request = new HttpRequestMessage(HttpMethod.Get, "https://www.mercedes-benz.it/passengercars/models/saloon/eqe/overview.html/");
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 

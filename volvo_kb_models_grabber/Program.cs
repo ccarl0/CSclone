@@ -41,77 +41,77 @@ internal class Program
     };
     private static async Task Main(string[] args)
     {
-        //string modelsPathString = "../../../assets/models.txt";
+        string modelsPathString = "../../../assets/models.txt";
 
-        //List<string> modelsURIList = new List<string>();
+        List<string> modelsURIList = new List<string>();
 
-        //try
-        //{
-        //    modelsURIList = File.ReadAllLines(modelsPathString).ToList();
-        //}
-        //catch (FileNotFoundException)
-        //{
-        //    Console.WriteLine($"File not found: {modelsPathString}");
-        //}
-        //catch (IOException ex)
-        //{
-        //    Console.WriteLine($"An error occurred while reading the file: {ex.Message}");
-        //}
+        try
+        {
+            modelsURIList = File.ReadAllLines(modelsPathString).ToList();
+        }
+        catch (FileNotFoundException)
+        {
+            Console.WriteLine($"File not found: {modelsPathString}");
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"An error occurred while reading the file: {ex.Message}");
+        }
 
-        //List<Task> tasks = new();
-        //Stopwatch stopwatch = Stopwatch.StartNew();
+        List<Task> tasks = new();
+        Stopwatch stopwatch = Stopwatch.StartNew();
 
 
-        //// Define the parallel limit
-        //int parallelLimit = 1; // Set the desired number of parallel tasks
+        // Define the parallel limit
+        int parallelLimit = 1; // Set the desired number of parallel tasks
 
-        //// Create a semaphore to control the parallelis
-        //SemaphoreSlim semaphore = new SemaphoreSlim(parallelLimit);
+        // Create a semaphore to control the parallelis
+        SemaphoreSlim semaphore = new SemaphoreSlim(parallelLimit);
 
-        //foreach (var modelURI in modelsURIList)
-        //{
-        //    Task task = Task.Run(async () =>
-        //    {
-        //        await semaphore.WaitAsync();
-        //        var browser = await Puppeteer.LaunchAsync(options);
-        //        await browser.PagesAsync().Result[0].GoToAsync(modelURI);
+        foreach (var modelURI in modelsURIList)
+        {
+            Task task = Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+                var browser = await Puppeteer.LaunchAsync(options);
+                await browser.PagesAsync().Result[0].GoToAsync(modelURI);
 
-        //        Thread.Sleep(3000);
-        //        // Simulate pressing Ctrl
-        //        keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
+                Thread.Sleep(3000);
+                // Simulate pressing Ctrl
+                keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
 
-        //        // Simulate pressing S
-        //        keybd_event(VK_S, 0, 0, UIntPtr.Zero);
+                // Simulate pressing S
+                keybd_event(VK_S, 0, 0, UIntPtr.Zero);
 
-        //        // Simulate releasing S
-        //        keybd_event(VK_S, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+                // Simulate releasing S
+                keybd_event(VK_S, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
 
-        //        // Simulate releasing Ctrl
-        //        keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+                // Simulate releasing Ctrl
+                keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
 
-        //        Thread.Sleep(4000);
-        //        // Simulate pressing Enter
-        //        keybd_event(VK_RETURN, 0, 0, UIntPtr.Zero);
-        //        Thread.Sleep(100);
-        //        // Simulate releasing Enter
-        //        keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+                Thread.Sleep(2000);
+                // Simulate pressing Enter
+                keybd_event(VK_RETURN, 0, 0, UIntPtr.Zero);
+                Thread.Sleep(100);
+                // Simulate releasing Enter
+                keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
 
-        //        Thread.Sleep(3000);
+                Thread.Sleep(3000);
 
-        //        semaphore.Release();
-        //        Thread.Sleep(120000);
-        //        await browser.CloseAsync();
+                semaphore.Release();
+                Thread.Sleep(20000);
+                await browser.CloseAsync();
 
-        //    });
-        //    tasks.Add(task);
-        //}
+            });
+            tasks.Add(task);
+        }
+
+        await Task.WhenAll(tasks);
 
         //await Task.WhenAll(tasks);
+        stopwatch.Stop();
 
-        ////await Task.WhenAll(tasks);
-        //stopwatch.Stop();
-
-        //Console.WriteLine($"Elapsed: {stopwatch.Elapsed}");
+        Console.WriteLine($"Elapsed: {stopwatch.Elapsed}");
 
 
 
@@ -132,18 +132,30 @@ internal class Program
         HtmlDocument doc = new HtmlDocument();
         doc.Load(htmlFile);
 
+
         List<string> xPathList = new List<string>()
         {
-            "//div[*[contains( text(), 'Scegli')]]",
-            "//div[div[a[contains( text(), 'Scegli')]]]",
-            "//div[div[@id='faqs']]",
-            "//div[button[contains( text(), 'Sfoglia')]]", // sfoglia la gallery
-            "//div[div[@id='promotions']]",
-            "//div[div[@id='iconCalloutsWithTabs']]",
-            "//div[div[a[span[contains( text(), 'Prenota')]]]]",
-            "//div[div[div[section[div[h2[contains( text(), 'Una vita ')]]]]]]" // parte elettrica
+            "//*[@id='onetrust-consent-sdk']", // XPath for cookie banner
+            "//div[nav[@id='site-navigation']]", // top bar
+            "//div[@data-autoid = 'PdpSubmenu']", // top subbar
+            "//button[contains( text(),'Sfoglia')]", // sfoglia la galley
+            "//a[contains( text(),'Esplora')]", // sfoglia la gallery
+            //"//*[@id='__NEXT_DATA__']",
+
+            "//div[@id='levelComparison']",
+            "//section[@data-autoid='Electrification']",
+            "//div[@id='imageWithTextAndMarketingLinks']",
+            "//div[div[div[div[section[@data-autoid='promotions']]]]]",
+            "//div[div[div[div[section[@data-autoid='faqs']]]]]",
+            "//div[@id='vcc-site-footer']", // footer
+
+            //disclaimer
+            "//section[@data-autoid='disclaimer']",
+            "//p[contains( text(), 'funziona')]",
+
         };
 
+        int i = 0;
         foreach (var xPath in xPathList)
         {
             var nodes = doc.DocumentNode.SelectNodes(xPath);
@@ -155,12 +167,15 @@ internal class Program
                     if (node != null)
                     {
                         node.Remove();
-                        Console.WriteLine("Removed");
+                        Console.Write($"{i}Removed:\t");
+                        Console.WriteLine(xPath);
+                        doc.Save(htmlFile + $"{i++}.html");
+
                     }
                 }
             }
         }
-        
-        doc.Save(htmlFile+"modified.html");
+
+        Console.WriteLine(htmlFile + "modified.html");
     }
 }
