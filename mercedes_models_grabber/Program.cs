@@ -55,91 +55,98 @@ internal class Program
             {
                 await semaphore.WaitAsync();
 
-                ChromeDriver driver = new ChromeDriver();
-
-                driver.Navigate().GoToUrl(url);
-
-                var driverShadowHosts = driver.FindElements(By.XPath("//*[@component-id]"));
-
-
-                List<HtmlDocument> htmlShadowDocumentList = new();
-
-                foreach (var driverShadowHost in driverShadowHosts)
+                try
                 {
-                    string driverShadowRootHtmlContent = (string)driver.ExecuteScript(script, driverShadowHost);
+                    ChromeDriver driver = new ChromeDriver();
 
-                    if (driverShadowRootHtmlContent != null)
+                    driver.Navigate().GoToUrl(url);
+
+                    var driverShadowHosts = driver.FindElements(By.XPath("//*[@component-id]"));
+
+
+                    List<HtmlDocument> htmlShadowDocumentList = new();
+
+                    foreach (var driverShadowHost in driverShadowHosts)
                     {
-                        HtmlDocument htmlShadowDocument = new();
-                        
-                        htmlShadowDocument.LoadHtml(driverShadowRootHtmlContent);
+                        string driverShadowRootHtmlContent = (string)driver.ExecuteScript(script, driverShadowHost);
 
-                        htmlShadowDocumentList.Add(htmlShadowDocument);
+                        if (driverShadowRootHtmlContent != null)
+                        {
+                            HtmlDocument htmlShadowDocument = new();
+
+                            htmlShadowDocument.LoadHtml(driverShadowRootHtmlContent);
+
+                            htmlShadowDocumentList.Add(htmlShadowDocument);
+                        }
                     }
+                    driver.Close();
+
+                    semaphore.Release();
+
+
+
+                    // download html file no shadow elements
+                    var htmlFilePath = await GetHtmlWithoutShadowAsync(url);
+
+
+                    HtmlDocument doc = new();
+                    doc.Load(htmlFilePath);
+
+
+                    var documentShadowHosts = doc.DocumentNode.SelectNodes("//*[@component-id]");
+
+                    // for each host in driverShadowHost add htmlShadow
+                    if (htmlShadowDocumentList.Count > documentShadowHosts.Count)
+                    {
+                        Console.WriteLine("documentShadowHosts");
+                        for (int i = 0; i < documentShadowHosts.Count; i++)
+                        {
+                            var child = htmlShadowDocumentList[i].DocumentNode;
+
+                            // manipualte children (I know sounds creepy)
+                            child = ManipulateChild(child);
+
+
+                            documentShadowHosts[i].PrependChild(child);
+                            doc.Save(htmlFilePath);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("htmlShadowDocumentList");
+
+                        if (htmlShadowDocumentList.Count == documentShadowHosts.Count)
+                        {
+                            Console.WriteLine("Uguale");
+                        }
+                        for (int i = 0; i < htmlShadowDocumentList.Count; i++)
+                        {
+                            var child = htmlShadowDocumentList[i].DocumentNode;
+                            //File.WriteAllText(htmlFilePath + i.ToString()+".html", child.InnerHtml);
+
+                            // manipualte children
+                            child = ManipulateChild(child);
+
+                            //File.WriteAllText(htmlFilePath + i.ToString() + "M.html", child.InnerHtml);
+
+                            documentShadowHosts[i].PrependChild(child);
+                            doc.Save(htmlFilePath);
+                        }
+                    }
+
+
+                    // html manipulation
+                    HtmlDocument modifiedDocument = new();
+                    modifiedDocument.Load(htmlFilePath);
+
+                    modifiedDocument = RemoveUnshadowedXpaths(modifiedDocument);
+
+                    modifiedDocument.Save(htmlFilePath);
                 }
-                driver.Close();
-
-                semaphore.Release();
-
-
-
-                // download html file no shadow elements
-                var htmlFilePath = await GetHtmlWithoutShadowAsync(url);
-
-
-                HtmlDocument doc = new();
-                doc.Load(htmlFilePath);
-
-
-                var documentShadowHosts = doc.DocumentNode.SelectNodes("//*[@component-id]");
-
-                // for each host in driverShadowHost add htmlShadow
-                if (htmlShadowDocumentList.Count > documentShadowHosts.Count)
+                catch (Exception e)
                 {
-                    Console.WriteLine("documentShadowHosts");
-                    for (int i = 0; i < documentShadowHosts.Count; i++)
-                    {
-                        var child = htmlShadowDocumentList[i].DocumentNode;
-
-                        // manipualte children (I know sounds creepy)
-                        child = ManipulateChild(child);
-
-
-                        documentShadowHosts[i].PrependChild(child);
-                        doc.Save(htmlFilePath);
-                    }
+                    Console.WriteLine(e.Message);
                 }
-                else
-                {
-                    Console.WriteLine("htmlShadowDocumentList");
-
-                    if (htmlShadowDocumentList.Count == documentShadowHosts.Count)
-                    {
-                        Console.WriteLine("Uguale");
-                    }
-                    for (int i = 0; i < htmlShadowDocumentList.Count; i++)
-                    {
-                        var child = htmlShadowDocumentList[i].DocumentNode;
-                        //File.WriteAllText(htmlFilePath + i.ToString()+".html", child.InnerHtml);
-
-                        // manipualte children
-                        child = ManipulateChild(child);
-
-                        //File.WriteAllText(htmlFilePath + i.ToString() + "M.html", child.InnerHtml);
-                        
-                        documentShadowHosts[i].PrependChild(child);
-                        doc.Save(htmlFilePath);
-                    }
-                }
-
-
-                // html manipulation
-                HtmlDocument modifiedDocument = new();
-                modifiedDocument.Load(htmlFilePath);
-
-                modifiedDocument = RemoveUnshadowedXpaths(modifiedDocument);
-
-                modifiedDocument.Save(htmlFilePath);
             });
 
             tasks.Add(task);
@@ -155,7 +162,6 @@ internal class Program
 
     private static HtmlNode ManipulateChild(HtmlNode child)
     {
-        Console.WriteLine(DateTime.Now);
         List<string> xPathToRemoveList = new()
         {
             "//div[.//p[contains( text(), 'Interessato')]]",
