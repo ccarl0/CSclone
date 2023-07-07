@@ -73,8 +73,13 @@ internal class Program
             Task task = Task.Run(async () =>
             {
                 await semaphore.WaitAsync();
+
+                Thread.Sleep(1000);
                 var browser = await Puppeteer.LaunchAsync(options);
+                Thread.Sleep(1000);
                 await browser.PagesAsync().Result[0].GoToAsync(modelURI);
+                await Console.Out.WriteLineAsync(modelURI);
+
 
                 Thread.Sleep(3000);
                 // Simulate pressing Ctrl
@@ -169,13 +174,13 @@ internal class Program
                         node.Remove();
                         Console.Write($"{i}Removed:\t");
                         Console.WriteLine(xPath);
-                        doc.Save(htmlFile + $"{i++}.html");
+                        doc.Save(htmlFile);
 
                     }
                 }
             }
         }
 
-        Console.WriteLine(htmlFile + "modified.html");
+        Console.WriteLine(htmlFile);
     }
 }
